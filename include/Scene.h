@@ -2,8 +2,7 @@
 // Created by rodrigo on 04/05/2026.
 //
 
-#ifndef VERTEXEDITOR_SCENE_H
-#define VERTEXEDITOR_SCENE_H
+#pragma once
 #include <map>
 #include <vector>
 #include <memory>
@@ -89,5 +88,3 @@ public:
 	void cleanup();
 };
 
-
-#endif //VERTEXEDITOR_SCENE_H

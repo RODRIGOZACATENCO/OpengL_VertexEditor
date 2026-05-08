@@ -1,5 +1,4 @@
-#ifndef SHADER_H
-#define SHADER_H
+#pragma once
 
 #include <string>
 #include <fstream>
@@ -246,5 +245,3 @@ public:
         glUniform1ui(glGetUniformLocation(ID, name.c_str()), value);
     }
 };
-
-#endif

@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <glad/glad.h>
 #include "../include/Renderer.h"
+#include "../OpenGL_include/TextureHandler.h"
 
 void Renderer::selectionBufferPass()
 {
@@ -20,38 +21,41 @@ void Renderer::selectionBufferPass()
 	{
 		case FACE_EDITING:
 			color_picking_shader->use();
-			for (auto mesh : *current_scene->getMeshes())
+			for (const auto& mesh_ptr : current_scene->getMeshes())
 			{
+				Mesh* mesh = mesh_ptr.get();
 				RenderInfo ri = current_scene->getRenderInfo(mesh);
 				color_picking_shader->setMat4("model", ri.model);
 				color_picking_shader->setUint("MeshID", mesh_id++);
 				color_picking_shader->setUint("gui_state",render_mode);
 				glBindVertexArray(ri.VAO);
-				glDrawElements(GL_TRIANGLES, mesh->face_render_indices.size(), GL_UNSIGNED_INT, 0);
+				glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(), GL_UNSIGNED_INT, 0);
 				glBindVertexArray(0);
 			}
 			break;
 		case VERTEX_EDITING:
 			color_picking_shader->use();
-			for (auto mesh :*current_scene->getMeshes())
+			for (const auto& mesh_ptr : current_scene->getMeshes())
 			{
+				Mesh* mesh = mesh_ptr.get();
 				RenderInfo ri = current_scene->getRenderInfo(mesh);
 				color_picking_shader->setMat4("model", ri.model);
 				color_picking_shader->setUint("MeshID", mesh_id++);
 				color_picking_shader->setUint("gui_state", render_mode);
 				glBindVertexArray(ri.VAO);
-				glDrawElements(GL_POINTS, mesh->face_render_indices.size(), GL_UNSIGNED_INT, 0);
+				glDrawElements(GL_POINTS, mesh->getFaceRenderIndices().size(), GL_UNSIGNED_INT, 0);
 				glBindVertexArray(0);
 			}
 			break;
 		case EDGE_EDITING:
 			edge_pass_shader->use();
-			for (auto mesh : *current_scene->getMeshes()) {
+			for (const auto& mesh_ptr : current_scene->getMeshes()) {
+				Mesh* mesh = mesh_ptr.get();
 				RenderInfo ri = current_scene->getRenderInfo(mesh);
 				edge_pass_shader->setMat4("model", ri.model);
 				edge_pass_shader->setUint("MeshID", mesh_id++);
 				glBindVertexArray(ri.edge_VAO);
-				glDrawElements(GL_LINES, mesh->edge_render_indices.size(), GL_UNSIGNED_INT, 0);
+				glDrawElements(GL_LINES, mesh->getEdgeRenderIndices().size(), GL_UNSIGNED_INT, 0);
 				glBindVertexArray(0);
 			}
 			break;
@@ -80,26 +84,27 @@ void Renderer::mainRenderPass()
 	int vertex_offset=current_scene->getFaceSelectionArray()->size();
 	int edges_offset =vertex_offset+current_scene->getVertexSelectionArray()->size();
 	int i=0;
-	for (auto mesh : *current_scene->getMeshes())
+	for (const auto& mesh_ptr : current_scene->getMeshes())
 
 	{
+		Mesh* mesh = mesh_ptr.get();
 		RenderInfo ri = current_scene->getRenderInfo(mesh);
 		main_shader->use();
 		main_shader->setMat4("model", ri.model);
 		main_shader->setInt("num_faces_offset", face_offset);
 		main_shader->setUint("gui_state", render_mode);
-		face_offset += mesh->faces.size();
+		face_offset += mesh->getFaces().size();
 
 		glBindVertexArray(ri.VAO);
-		glDrawElements(GL_TRIANGLES, mesh->face_render_indices.size(), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(), GL_UNSIGNED_INT, 0);
 		
 		if(render_mode==VERTEX_EDITING) {
 
 			vertex_pass_shader->use();
 			vertex_pass_shader->setMat4("model", ri.model);
 			vertex_pass_shader->setInt("num_vertices_offset", vertex_offset);
-			vertex_offset += mesh->vertices.size();
-			glDrawArrays(GL_POINTS, 0,mesh->vertices.size());
+			vertex_offset += mesh->getVertices().size();
+			glDrawArrays(GL_POINTS, 0,mesh->getVertices().size());
 		}
 		/*
 				if (render_mode == EDGE_EDITING)
@@ -108,8 +113,8 @@ void Renderer::mainRenderPass()
 					main_pass_edge_shader->use();
 					main_pass_edge_shader->setMat4("model", ri.model);
 					main_pass_edge_shader->setInt("num_vertices_offset", vertex_offset);
-					edges_offset += mesh->edges.size();
-					glDrawElements(GL_LINES, mesh->edge_render_indices.size(), GL_UNSIGNED_INT, 0);
+					edges_offset += mesh->getEdges().size();
+					glDrawElements(GL_LINES, mesh->getEdgeRenderIndices().size(), GL_UNSIGNED_INT, 0);
 				}
 					*/
 		glBindVertexArray(0);

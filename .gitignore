@@ -1,0 +1,40 @@
+# Build artifacts
+/build/
+/cmake-build-debug/
+/CMakeFiles/
+/CMakeCache.txt
+/cmake_install.cmake
+/Makefile
+/Makefile.cmake
+/compile_commands.json
+/VertexEditor
+/*.dir/
+
+# CLion project files
+.idea/
+
+# VS Code files
+.vscode/
+
+# Generated dependency folders
+_deps/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor backup files
+*~
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# User-specific files
+*.user
+*.user.*
+
+# Temporary files
+*.tmp
+*.temp

@@ -26,6 +26,7 @@ add_executable(${PROJECT_NAME}
         include/MainWindow.h
 
         OpenGL_include/ShaderHandler.h
+        OpenGL_include/TextureHandler.h
         src/Mesh.cpp
         src/MainWindow.cpp
         src/Scene.cpp

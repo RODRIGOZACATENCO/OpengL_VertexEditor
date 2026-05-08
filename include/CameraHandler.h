@@ -1,7 +1,6 @@
 
 
-#ifndef VERTEXEDITOR_CAMERAHANDLER_H
-#define VERTEXEDITOR_CAMERAHANDLER_H
+#pragma once
 #include <GLFW/glfw3.h>
 enum cameraType {
 	GIMBALL,//camera view fixed on the center of the object, arrow movement
@@ -14,5 +13,3 @@ class CameraHandler {
 
 };
 
-
-#endif //VERTEXEDITOR_CAMERAHANDLER_H

@@ -3,7 +3,6 @@
 //
 
 #include <glad/glad.h>
-#include <filesystem>
 
 #include "../include/MainWindow.h"
 

@@ -2,8 +2,8 @@
 // Created by rodrigo on 04/05/2026.
 //
 
-#ifndef VERTEXEDITOR_RENDERER_H
-#define VERTEXEDITOR_RENDERER_H
+#pragma once
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <memory>
 #include <optional>
@@ -71,5 +71,3 @@ public:
 	std::pair<int, int> getCursorPositionInViewport(GLFWwindow* window);
 };
 
-
-#endif //VERTEXEDITOR_RENDERER_H
