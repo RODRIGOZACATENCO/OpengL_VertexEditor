@@ -1,56 +1,77 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <string>
 
 // Shared headers from your global directory
-#include "model_loader.h"
+#include <random>
+
+#include "MainWindow.h"
+
+#include "ShaderHandler.h"
 #include "TextureHandler.h"
 
 
-// Timing
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
+#include "GUI.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+#include "Renderer.h"
 
-void framebuffer_size_callback(GLFWwindow* window, int		width, int height) {
-    glViewport(0, 0, width, height);
+int main()
+{
+	// GLFW Init
+	if (!glfwInit())
+		return -1;
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	GLFWwindow *window = glfwCreateWindow(1200, 800, "VertexEditor", nullptr, nullptr);
+	if (window == nullptr)
+	{
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	// GLAD Init
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+		std::cout << "Failed to initialize GLAD" << std::endl;
+		return -1;
+	}
+	MainWindow main_window(window);
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO &io = ImGui::GetIO();
+	(void)io;
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 460 core");
+
+	int frameBufferWidth = 1200;
+	int frameBufferHeight = 800;
+	glfwGetFramebufferSize(window, &frameBufferWidth, &frameBufferHeight);
+	glViewport(0, 0, frameBufferWidth, frameBufferHeight);
+
+
+
+	ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
+
+	//@TODO element detection does not account for faces that we cant see on the viewport
+	//@TODO change the way the detection pass renders its color to account for this
+	//@TODO move all mesh information into a Scene class - WORKING
+	//@TODO move all rendering calls into a Renderer class, organize better the shaders names
+	//@TODO create simple functions that save and load processed meshes as a binary file
+
+	main_window.use();
+	main_window.cleanup();
+
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+	glfwTerminate();
+	return 0;
 }
 
-
-
-int SKYBOX_TEXTURE_ID=0,CONTAINER_TEXTURE_ID=1;
-int main() {
-    // GLFW Init
-    if (!glfwInit()) return -1;
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    GLFWwindow* window = glfwCreateWindow(800, 600, "OpenGL Project", nullptr, nullptr);
-    if (window == nullptr) {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    // GLAD Init
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
-
-	int frameBufferWidth = 800;
-	int frameBufferHeight = 600;
-	glfwGetFramebufferSize(window,&frameBufferWidth,&frameBufferHeight);
-	glViewport(0,0,frameBufferWidth,frameBufferHeight);
-    // Render Loop
-    while (!glfwWindowShouldClose(window)) {
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-
-
-    glfwTerminate();
-    return 0;
-}
