@@ -193,31 +193,31 @@ void Renderer::shaderSetup() {
   std::string edge_detection_dir = "shaders/element_detection/edges/";
 
   face_color_pass =
-      std::make_unique<Shader>(face_color_pass_dir + "facePass.vert",
-                               face_color_pass_dir + "facePass.geom",
-                               face_color_pass_dir + "facePass.frag");
+      std::make_unique<Shader>(face_color_pass_dir + "faceColorPass.vert",
+                               face_color_pass_dir + "faceColorPass.geom",
+                               face_color_pass_dir + "faceColorPass.frag");
 
   vertex_color_pass =
-      std::make_unique<Shader>(vertex_color_pass_dir + "vertexPass.vert",
-                               vertex_color_pass_dir + "vertexPass.geom",
-                               vertex_color_pass_dir + "vertexPass.frag");
+      std::make_unique<Shader>(vertex_color_pass_dir + "vertexColorPass.vert",
+                               vertex_color_pass_dir + "vertexColorPass.geom",
+                               vertex_color_pass_dir + "vertexCoPass.frag");
 
   edge_color_pass =
-      std::make_unique<Shader>(edge_color_pass_dir + "edgePass.vert",
-                               edge_color_pass_dir + "edgePass.geom",
-                               edge_color_pass_dir + "edgePass.frag");
+      std::make_unique<Shader>(edge_color_pass_dir + "edgeColorPass.vert",
+                               edge_color_pass_dir + "edgeColorPass.geom",
+                               edge_color_pass_dir + "edgeColorPass.frag");
   face_detection =
-      std::make_unique<Shader>(face_detection_dir + "face_detection.vert",
-                               face_detection_dir + "face_detection.geom",
-                               face_detection_dir + "face_detection.frag");
+      std::make_unique<Shader>(face_detection_dir + "faceDetection.vert",
+                               face_detection_dir + "faceDetection.geom",
+                               face_detection_dir + "faceDetection.frag");
   vertex_detection =
-      std::make_unique<Shader>(vertex_detection_dir + "vertex_detection.vert",
-                               vertex_detection_dir + "vertex_detection.geom",
-                               vertex_detection_dir + "vertex_detection.frag");
+      std::make_unique<Shader>(vertex_detection_dir + "vertexDetection.vert",
+                               vertex_detection_dir + "vertexDetection.geom",
+                               vertex_detection_dir + "vertexDetection.frag");
   edge_detection =
-      std::make_unique<Shader>(edge_detection_dir + "edge_detection.vert",
-                               edge_detection_dir + "edge_detection.geom",
-                               edge_detection_dir + "edge_detection.frag");
+      std::make_unique<Shader>(edge_detection_dir + "edgDetection.vert",
+                               edge_detection_dir + "edgeDetection.geom",
+                               edge_detection_dir + "edgeDetection.frag");
   setViewProjectionMatrices();
 }
 
