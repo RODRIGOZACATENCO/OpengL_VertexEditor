@@ -17,6 +17,17 @@ struct FramebufferInfo {
   unsigned int texture;
   unsigned int DBO;
 };
+enum Shader_names {
+  default_color_pass,
+  face_color_pass,
+  edge_color_pass,
+  vertex_color_pass,
+  edge_detection,
+  vertex_detection,
+  face_detection,
+  shader_count
+};
+
 /*Renderer Class makes the calls to the graphic API
  *it holds all the shaders
  **/
@@ -26,14 +37,7 @@ private:
   GUIState render_mode; // FACE, VERTEX OR EDGE EDITING
   GLFWwindow *window;
   int width, height;
-
-  std::unique_ptr<Shader> face_color_pass;
-  std::unique_ptr<Shader> edge_color_pass;
-  std::unique_ptr<Shader> vertex_color_pass;
-
-  std::unique_ptr<Shader> edge_detection;
-  std::unique_ptr<Shader> vertex_detection;
-  std::unique_ptr<Shader> face_detection;
+  std::vector<std::unique_ptr<Shader>> shaders; // holds all the shaders
 
   FramebufferInfo element_detection_framebuffer_info;
 
@@ -50,7 +54,11 @@ public:
     this->height = height;
   }
 
-  void setCurrentScene(Scene *scene) { this->current_scene = scene; }
+  void setCurrentScene(Scene *scene) {
+    this->current_scene = scene;
+    std::cout << "asldnashasjdjkbjasdbbjasasdkbabasd" << std::endl;
+    setViewProjectionMatrices();
+  }
   Scene *getCurrentScene() { return current_scene; }
 
   void setRenderMode(GUIState state) { this->render_mode = state; }
@@ -67,6 +75,7 @@ public:
   void shaderSetup();
   void resizeFramebuffer();
   void setViewProjectionMatrices();
+
   void cleanup();
   bool rendererIsReady(std::string *out_error = nullptr) const;
   std::optional<std::tuple<unsigned int, unsigned int, unsigned int>>

@@ -21,7 +21,7 @@ public:
   }
 
   // constructor reads and builds the shader
-  Shader(std::string vertexPath, std::string fragmentPath) {
+  Shader(std::string vertexPath, std::string fragmentPath) : ID(0) {
     // 1. retrieve the vertex/fragment source code from filePath
     std::string vertexCode;
     std::string fragmentCode;
@@ -52,6 +52,7 @@ public:
       std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
       std::cout << "vertexPath: " << vertexPath << std::endl;
       std::cout << "fragmentPath: " << fragmentPath << std::endl;
+      return;
     }
 
     const char *vShaderCode = vertexCode.c_str();
@@ -101,7 +102,7 @@ public:
   }
 
   Shader(std::string vertexPath, std::string geometryPath,
-         std::string fragmentPath) {
+         std::string fragmentPath) : ID(0) {
 
     std::string vertexCode;
     std::string fragmentCode;
@@ -139,6 +140,7 @@ public:
       std::cout << "vertexPath: " << vertexPath << std::endl;
       std::cout << "fragmentPath: " << fragmentPath << std::endl;
       std::cout << "geometryPath: " << geometryPath << std::endl;
+      return;
     }
 
     const char *vShaderCode = vertexCode.c_str();

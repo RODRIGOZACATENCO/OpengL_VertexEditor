@@ -5,12 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 include(FetchContent)
 
-FetchContent_Declare(
-    imgui
-    GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG v1.89.8
-)
-FetchContent_MakeAvailable(imgui)
+# ImGui is now located in ${SHARED_INCLUDE_DIR}/imgui
 
 # Set your shared includes
 set(SHARED_INCLUDE_DIR "OpenGL_include")
@@ -51,18 +46,18 @@ find_package(glm REQUIRED)
 
 # Link them
 target_sources(${PROJECT_NAME} PRIVATE
-        ${imgui_SOURCE_DIR}/imgui_demo.cpp
-        ${imgui_SOURCE_DIR}/imgui.cpp
-        ${imgui_SOURCE_DIR}/imgui_draw.cpp
-        ${imgui_SOURCE_DIR}/imgui_tables.cpp
-        ${imgui_SOURCE_DIR}/imgui_widgets.cpp
-        ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
-        ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+        ${SHARED_INCLUDE_DIR}/imgui/imgui_demo.cpp
+        ${SHARED_INCLUDE_DIR}/imgui/imgui.cpp
+        ${SHARED_INCLUDE_DIR}/imgui/imgui_draw.cpp
+        ${SHARED_INCLUDE_DIR}/imgui/imgui_tables.cpp
+        ${SHARED_INCLUDE_DIR}/imgui/imgui_widgets.cpp
+        ${SHARED_INCLUDE_DIR}/imgui/backends/imgui_impl_glfw.cpp
+        ${SHARED_INCLUDE_DIR}/imgui/backends/imgui_impl_opengl3.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-        ${imgui_SOURCE_DIR}
-        ${imgui_SOURCE_DIR}/backends
+        ${SHARED_INCLUDE_DIR}/imgui
+        ${SHARED_INCLUDE_DIR}/imgui/backends
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

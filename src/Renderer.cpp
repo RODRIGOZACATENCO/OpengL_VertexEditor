@@ -1,12 +1,17 @@
 //
 // Created by rodrigo on 04/05/2026.
 //
+
 #include "../include/Renderer.h"
 #include "../OpenGL_include/TextureHandler.h"
 #include "GUI.h"
 
+#include <GLFW/glfw3.h>
 #include <glad/glad.h>
+#include <glm/ext/matrix_transform.hpp>
+#include <vector>
 void Renderer::selectionBufferPass() {
+  /*
   glfwGetFramebufferSize(window, (&width), &height);
   glViewport(0, 0, width, height);
   glBindFramebuffer(GL_FRAMEBUFFER, element_detection_framebuffer_info.FBO);
@@ -18,51 +23,54 @@ void Renderer::selectionBufferPass() {
   unsigned int mesh_id = 0;
   switch (render_mode) {
   case FACE_EDITING:
-    face_detection->use();
+    shaders[face_detection]->use();
     for (const auto &mesh_ptr : current_scene->getMeshes()) {
       Mesh *mesh = mesh_ptr.get();
       RenderInfo ri = current_scene->getRenderInfo(mesh);
-      face_detection->setMat4("model", ri.model);
-      face_detection->setUint("MeshID", mesh_id++);
-      face_detection->setUint("gui_state", render_mode);
+      shaders[face_detection]->setMat4("model", ri.model);
+      shaders[face_detection]->setMat4("MeshID", mesh_id++);
       glBindVertexArray(ri.VAO);
       glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(),
                      GL_UNSIGNED_INT, 0);
       glBindVertexArray(0);
     }
-    break;
-  case VERTEX_EDITING:
-    vertex_detection->use();
-    for (const auto &mesh_ptr : current_scene->getMeshes()) {
-      Mesh *mesh = mesh_ptr.get();
-      RenderInfo ri = current_scene->getRenderInfo(mesh);
-      vertex_detection->setMat4("model", ri.model);
-      vertex_detection->setUint("MeshID", mesh_id++);
-      vertex_detection->setUint("gui_state", render_mode);
-      glBindVertexArray(ri.VAO);
-      glDrawElements(GL_POINTS, mesh->getFaceRenderIndices().size(),
-                     GL_UNSIGNED_INT, 0);
-      glBindVertexArray(0);
-    }
-    break;
-  case EDGE_EDITING:
-    edge_detection->use();
-    for (const auto &mesh_ptr : current_scene->getMeshes()) {
-      Mesh *mesh = mesh_ptr.get();
-      RenderInfo ri = current_scene->getRenderInfo(mesh);
-      edge_detection->setMat4("model", ri.model);
-      edge_detection->setUint("MeshID", mesh_id++);
-      glBindVertexArray(ri.edge_VAO);
-      glDrawElements(GL_LINES, mesh->getEdgeRenderIndices().size(),
-                     GL_UNSIGNED_INT, 0);
-      glBindVertexArray(0);
-    }
-    break;
   }
+  /*
+break;
+case VERTEX_EDITING:
+vertex_detection->use();
+for (const auto &mesh_ptr : current_scene->getMeshes()) {
+  Mesh *mesh = mesh_ptr.get();
+  RenderInfo ri = current_scene->getRenderInfo(mesh);
+  vertex_detection->setMat4("model", ri.model);
+  vertex_detection->setUint("MeshID", mesh_id++);
+  vertex_detection->setUint("gui_state", render_mode);
+  glBindVertexArray(ri.VAO);
+  glDrawElements(GL_POINTS, mesh->getFaceRenderIndices().size(),
+                 GL_UNSIGNED_INT, 0);
+  glBindVertexArray(0);
+}
+break;
+case EDGE_EDITING:
+edge_detection->use();
+for (const auto &mesh_ptr : current_scene->getMeshes()) {
+  Mesh *mesh = mesh_ptr.get();
+  RenderInfo ri = current_scene->getRenderInfo(mesh);
+  edge_detection->setMat4("model", ri.model);
+  edge_detection->setUint("MeshID", mesh_id++);
+  glBindVertexArray(ri.edge_VAO);
+  glDrawElements(GL_LINES, mesh->getEdgeRenderIndices().size(),
+                 GL_UNSIGNED_INT, 0);
+  glBindVertexArray(0);
+}
+break;
+}
+*/
 }
 
 void Renderer::mainRenderPass() {
-  setViewProjectionMatrices();
+
+  setViewProjectionMatrices(); //@TODO check later
   std::string error;
   if (!rendererIsReady(&error)) {
     std::cout << "Renderer is not ready" << std::endl;
@@ -84,10 +92,19 @@ void Renderer::mainRenderPass() {
   int edges_offset =
       vertex_offset + current_scene->getVertexSelectionArray()->size();
   for (const auto &mesh_ptr : current_scene->getMeshes()) {
-
     Mesh *mesh = mesh_ptr.get();
     RenderInfo ri = current_scene->getRenderInfo(mesh);
-    //@TODO make it so the colors of the faces only renders while in this mode
+    // renders the default mesh color, grey with green outline on the edges
+    shaders[default_color_pass]->use();
+
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, -1.0f, -5.0f));
+    model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(1.0, 0.3, 0.1));
+    shaders[default_color_pass]->setMat4("model", model);
+    glBindVertexArray(ri.VAO);
+    glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(),
+                   GL_UNSIGNED_INT, 0);
+    /*
     if (render_mode == FACE_EDITING) {
       face_color_pass->use();
       face_color_pass->setMat4("model", ri.model);
@@ -107,7 +124,7 @@ void Renderer::mainRenderPass() {
       vertex_offset += mesh->getVertices().size();
       glDrawArrays(GL_POINTS, 0, mesh->getVertices().size());
     }
-    /*
+
                     if (render_mode == EDGE_EDITING)
                     {
                             glDisable(GL_CULL_FACE);
@@ -155,69 +172,71 @@ void Renderer::FramebufferSetup() {
 }
 void Renderer::setViewProjectionMatrices() {
 
-  face_color_pass->use();
-  face_color_pass->setMat4("view", current_scene->getViewMatrix());
-  face_color_pass->setMat4("projection", current_scene->getProjectionMatrix());
-
-  vertex_color_pass->use();
-  vertex_color_pass->setMat4("view", current_scene->getViewMatrix());
-  vertex_color_pass->setMat4("projection",
-                             current_scene->getProjectionMatrix());
-
-  edge_color_pass->use();
-  edge_color_pass->setMat4("view", current_scene->getViewMatrix());
-  edge_color_pass->setMat4("projection", current_scene->getProjectionMatrix());
-
-  face_detection->use();
-  face_detection->setMat4("view", current_scene->getViewMatrix());
-  face_detection->setMat4("projection", current_scene->getProjectionMatrix());
-
-  vertex_detection->use();
-  vertex_detection->setMat4("view", current_scene->getViewMatrix());
-  vertex_detection->setMat4("projection", current_scene->getProjectionMatrix());
-
-  edge_detection->use();
-  edge_detection->setMat4("view", current_scene->getViewMatrix());
-  edge_detection->setMat4("projection", current_scene->getProjectionMatrix());
+  for (int i = 0; i < shaders.size(); i++) {
+    if (shaders[i])
+      shaders[i]->setMat4("view_projection",
+                          current_scene->getViewProjectionMatrix());
+  }
 }
 
 //@TODO later, change it into different function that generates new renders
 void Renderer::shaderSetup() {
   // the paths for the color pass
-  std::string face_color_pass_dir = "shaders/color_pass/faces/";
-  std::string vertex_color_pass_dir = "shaders/color_pass/vertex/";
-  std::string edge_color_pass_dir = "shaders/color_pass/edges/";
+  std::string root = ROOT_DIR;
+  std::string default_color_pass_dir =
+      root + "shaders/mesh_editing/color_pass/default/";
 
-  std::string face_detection_dir = "shaders/element_detection/faces/";
-  std::string vertex_detection_dir = "shaders/element_detection/vertex/";
-  std::string edge_detection_dir = "shaders/element_detection/edges/";
+  std::string face_color_pass_dir =
+      root + "shaders/mesh_editing/color_pass/faces/";
 
-  face_color_pass =
-      std::make_unique<Shader>(face_color_pass_dir + "faceColorPass.vert",
-                               face_color_pass_dir + "faceColorPass.geom",
-                               face_color_pass_dir + "faceColorPass.frag");
+  std::string vertex_color_pass_dir =
+      root + "shaders/mesh_editing/color_pass/vertex/";
+  std::string edge_color_pass_dir =
+      root + "shaders/mesh_editing/color_pass/edges/";
 
-  vertex_color_pass =
-      std::make_unique<Shader>(vertex_color_pass_dir + "vertexColorPass.vert",
-                               vertex_color_pass_dir + "vertexColorPass.geom",
-                               vertex_color_pass_dir + "vertexCoPass.frag");
+  std::string face_detection_dir =
+      root + "shaders/mesh_editing/element_detection/faces/";
+  std::string vertex_detection_dir =
+      root + "shaders/mesh_editing/element_detection/vertex/";
+  std::string edge_detection_dir =
+      root + "shaders/mesh_editing/element_detection/edges/";
+  shaders.resize(Shader_names::shader_count); // resize to create elements
+  // shaders
 
-  edge_color_pass =
-      std::make_unique<Shader>(edge_color_pass_dir + "edgeColorPass.vert",
-                               edge_color_pass_dir + "edgeColorPass.geom",
-                               edge_color_pass_dir + "edgeColorPass.frag");
-  face_detection =
-      std::make_unique<Shader>(face_detection_dir + "faceDetection.vert",
-                               face_detection_dir + "faceDetection.geom",
-                               face_detection_dir + "faceDetection.frag");
-  vertex_detection =
-      std::make_unique<Shader>(vertex_detection_dir + "vertexDetection.vert",
-                               vertex_detection_dir + "vertexDetection.geom",
-                               vertex_detection_dir + "vertexDetection.frag");
-  edge_detection =
-      std::make_unique<Shader>(edge_detection_dir + "edgDetection.vert",
-                               edge_detection_dir + "edgeDetection.geom",
-                               edge_detection_dir + "edgeDetection.frag");
+  shaders[Shader_names::default_color_pass] = std::make_unique<Shader>(
+      default_color_pass_dir + "defaultColorPass.vert",
+      default_color_pass_dir + "defaultColorPass.geom",
+      default_color_pass_dir + "defaultColorPass.frag");
+  /*
+shaders[Shader_names::face_color_pass] =
+std::make_unique<Shader>(face_color_pass_dir + "faceColorPass.vert",
+                         face_color_pass_dir + "faceColorPass.geom",
+                         face_color_pass_dir + "faceColorPass.frag");
+
+shaders[Shader_names::vertex_color_pass] =
+  std::make_unique<Shader>(vertex_color_pass_dir + "vertexColorPass.vert",
+                           vertex_color_pass_dir + "vertexColorPass.geom",
+                           vertex_color_pass_dir + "vertexCoPass.frag");
+
+shaders[Shader_names::edge_color_pass] =
+  std::make_unique<Shader>(edge_color_pass_dir + "edgeColorPass.vert",
+                           edge_color_pass_dir + "edgeColorPass.geom",
+                           edge_color_pass_dir + "edgeColorPass.frag");
+                           */
+  /*
+shaders[Shader_names::face_detection] =
+std::make_unique<Shader>(face_detection_dir + "faceDetection.vert",
+      face_detection_dir + "faceDetection.frag");
+/*
+shaders[Shader_names::vertex_detection] =
+std::make_unique<Shader>(vertex_detection_dir + "vertexDetection.vert",
+      vertex_detection_dir + "vertexDetection.geom",
+      vertex_detection_dir + "vertexDetection.frag");
+shaders[Shader_names::edge_detection] =
+std::make_unique<Shader>(edge_detection_dir + "edgDetection.vert",
+      edge_detection_dir + "edgeDetection.geom",
+      edge_detection_dir + "edgeDetection.frag");
+*/
   setViewProjectionMatrices();
 }
 
@@ -285,16 +304,8 @@ bool Renderer::rendererIsReady(std::string *out_error) const {
     return fail("No GLFW window set.");
   if (!current_scene)
     return fail("No scene set.");
-  if (!face_color_pass)
-    return fail("Main shader not loaded.");
-  if (!face_detection)
-    return fail("Face detection shader not loaded.");
-  if (!vertex_detection)
-    return fail("Vertex detection shader not loaded.");
-  if (!edge_detection)
-    return fail("Edge detection shader not loaded.");
-  if (!edge_color_pass)
-    return fail("Edge color pass shader not loaded.");
+  if (shaders.size() < Shader_names::shader_count)
+    return fail("Shaders array is not fully populated.");
   if (width <= 0 || height <= 0)
     return fail("Invalid screen dimensions.");
   if (element_detection_framebuffer_info.FBO == 0)
