@@ -64,9 +64,8 @@ public:
   }
 
   // Getters and Setters
-  void setModelMatrix(std::string name, glm::mat4 model) {
-    unsigned int mesh_id = mesh_name_to_id[name];
-    mesh_to_render_info[meshes[mesh_id].get()].model = model;
+  void setModelMatrix(Mesh *mesh, glm::mat4 model) {
+    mesh_to_render_info[mesh].model=model;
   }
 
   void setViewMatrix(const glm::mat4 &view) {

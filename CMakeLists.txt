@@ -3,7 +3,8 @@ project(VertexEditor)
 
 set(CMAKE_CXX_STANDARD 20)
 
-include(FetchContent)
+#RUN THIS FIRST TO INSTALL IMGUI
+#git clone --depth 1 --branch v1.89.8 https://github.com/ocornut/imgui.git OpenGL_include/imgui
 
 # ImGui is now located in ${SHARED_INCLUDE_DIR}/imgui
 

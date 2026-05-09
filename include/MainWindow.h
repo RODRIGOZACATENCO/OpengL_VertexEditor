@@ -85,10 +85,6 @@ public:
 
     default_scene->addMesh(std::move(pyramid), "cube", glm::mat4(1.0f));
 
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, -1.0f, -5.0f));
-    default_scene->setModelMatrix("cube", model);
-
     gui.main_state.isFaceSelectionActive =
         true; // sets the initial state of the face selection button to active
     gui.setState(FACE_EDITING);

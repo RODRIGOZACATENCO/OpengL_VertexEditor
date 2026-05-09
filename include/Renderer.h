@@ -75,7 +75,7 @@ public:
   void shaderSetup();
   void resizeFramebuffer();
   void setViewProjectionMatrices();
-
+  void updateModelMatrices();//updates all given model matrices, for now
   void cleanup();
   bool rendererIsReady(std::string *out_error = nullptr) const;
   std::optional<std::tuple<unsigned int, unsigned int, unsigned int>>
