@@ -65,6 +65,8 @@ void Scene::meshArraysSetup(Mesh *mesh) {
   }
   for (int i = 0; i < mesh->getVertices().size(); i++) {
     vertex_selection_array.push_back(0);
+
+    vertex_already_rendered_array.push_back(0);
   }
   for (int i = 0; i < mesh->getEdges().size(); i++) {
     edge_selection_array.push_back(0);
@@ -92,6 +94,14 @@ void Scene::meshArraysSetup(Mesh *mesh) {
                combined_selection_array.data(), GL_DYNAMIC_DRAW);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, selected_elements_ssbo);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+  glGenBuffers(1, &vertex_already_rendered_ssbo);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, vertex_already_rendered_ssbo);
+  glBufferData(GL_SHADER_STORAGE_BUFFER,
+               vertex_already_rendered_array.size() * sizeof(int),
+               vertex_selection_array.data(), GL_DYNAMIC_DRAW);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, vertex_already_rendered_ssbo);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, 1);
 }
 
 /*Setup all the meshes RenderInfo to show on the screen */

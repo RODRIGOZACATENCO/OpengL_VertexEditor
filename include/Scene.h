@@ -27,6 +27,7 @@ struct RenderInfo {
   unsigned int EBO;
   unsigned int edge_VAO;
   unsigned int edge_EBO;
+
   glm::mat4 model;
 };
 class Scene {
@@ -37,10 +38,23 @@ private:
   std::vector<int> face_selection_array;
   std::vector<int> vertex_selection_array;
   std::vector<int> edge_selection_array;
+
+  /*array that the vertex shaders use to determine wich vertices are already
+drawn, because vertex pass uses GL_TRIANGLES to draw
+*/
+  unsigned int vertex_already_rendered_ssbo = 0;
+
+  // it combines all vertices index to check if alreay rendered, of all meshes,
+  // into a single vector index offset needed per mesh
+  std::vector<int> vertex_already_rendered_array;
+
   unsigned int total_meshes = 0;
   std::map<Mesh *, RenderInfo> mesh_to_render_info;
-  std::map<std::string, unsigned int> mesh_name_to_id;
+  std::map<Mesh *, std::string> mesh_to_name;
   std::vector<std::unique_ptr<Mesh>> meshes;
+
+  // array that the shaders use to determine what elements of the mesh are
+  // currently selected
   unsigned int selected_elements_ssbo = 0;
 
 public:
@@ -57,7 +71,7 @@ public:
     render_info.model = model;
     mesh_to_render_info[mesh_ptr] = render_info;
     meshes.push_back(std::move(mesh));
-    mesh_name_to_id[name] = meshes.size() - 1;
+    mesh_to_name[mesh_ptr] = name;
     total_meshes++;
     meshRenderSetup(mesh_ptr);
     meshArraysSetup(mesh_ptr);
@@ -65,7 +79,7 @@ public:
 
   // Getters and Setters
   void setModelMatrix(Mesh *mesh, glm::mat4 model) {
-    mesh_to_render_info[mesh].model=model;
+    mesh_to_render_info[mesh].model = model;
   }
 
   void setViewMatrix(const glm::mat4 &view) {
@@ -95,8 +109,10 @@ public:
   std::vector<int> *getVertexSelectionArray() {
     return &vertex_selection_array;
   }
+
   std::vector<int> *getEdgeSelectionArray() { return &edge_selection_array; }
 
+  std::string getMeshName(Mesh *mesh) { return mesh_to_name[mesh]; }
   void meshArraysSetup(Mesh *mesh);
   void updateSelectionBuffer(GUIState state);
   void resetSelectionBuffer(GUIState type);

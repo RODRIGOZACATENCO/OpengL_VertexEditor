@@ -30,11 +30,11 @@ void MainWindow::use(std::string *scene_name) {
     scene_name = &default_scene_name;
   // the renderer will accept the scene and draw it in the screen
   renderer->setCurrentScene(scene_name_to_scene_object[*scene_name].get());
-  renderer->setRenderMode(FACE_EDITING);
+
   std::string error;
   if (isWindowReady(&error)) {
     while (!glfwWindowShouldClose(window)) {
-
+      renderer->setRenderMode(gui.getCurrentState());
       // 1. POLL EVENTS FIRST
       glfwPollEvents();
       processInput();

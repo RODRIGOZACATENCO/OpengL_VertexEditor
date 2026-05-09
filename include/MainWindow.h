@@ -3,6 +3,7 @@
 
 #pragma once
 #include <GLFW/glfw3.h>
+#include <glm/detail/qualifier.hpp>
 #include <map>
 #include <memory>
 #include <optional>
@@ -74,16 +75,19 @@ public:
   MainWindow(GLFWwindow *window) : window(window), width(0), height(0) {
     glfwGetFramebufferSize(window, &width, &height);
     auto pyramid = std::make_unique<Mesh>(&piramid_vertices, &piramid_faces);
+    auto cube = std::make_unique<Mesh>(&cube_vertices, &faces);
     // starts with a default scene
     glm::mat4 view =
         glm::lookAt(glm::vec3(0, 1, 2), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 
     glm::mat4 projection = glm::perspective(
         glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
+
     auto default_scene = std::make_unique<Scene>(
         view, projection); // initialize the default scene
 
-    default_scene->addMesh(std::move(pyramid), "cube", glm::mat4(1.0f));
+    default_scene->addMesh(std::move(pyramid), "pyramid", glm::mat4(1.0f));
+    default_scene->addMesh(std::move(cube), "cube", glm::mat4(1.0f));
 
     gui.main_state.isFaceSelectionActive =
         true; // sets the initial state of the face selection button to active
