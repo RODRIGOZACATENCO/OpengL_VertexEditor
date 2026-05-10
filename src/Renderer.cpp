@@ -10,11 +10,30 @@
 #include <glad/glad.h>
 #include <glm/ext/matrix_transform.hpp>
 #include <vector>
-void Renderer::selectionBufferPass() {
+
+void Renderer::processDrawCall(Render_type type_of_render) {
+  // vertex needs to be reseted each frame;
+  auto *reset = current_scene->getVertexAlreadyRenderedArray();
+  std::fill(reset->begin(), reset->end(), 0);
+
   updateModelMatrices();
   setViewProjectionMatrices();
   glfwGetFramebufferSize(window, (&width), &height);
   glViewport(0, 0, width, height);
+
+  switch (type_of_render) {
+  case main_render_pass:
+    mainRenderPass();
+    break;
+
+  case selection_render_pass:
+    selectionRenderPass();
+    break;
+  }
+}
+
+void Renderer::selectionRenderPass() {
+
   glBindFramebuffer(GL_FRAMEBUFFER, element_detection_framebuffer_info.FBO);
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

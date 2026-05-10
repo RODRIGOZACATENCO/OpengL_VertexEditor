@@ -109,7 +109,9 @@ public:
   std::vector<int> *getVertexSelectionArray() {
     return &vertex_selection_array;
   }
-
+  std::vector<int> *getVertexAlreadyRenderedArray() {
+    return &vertex_already_rendered_array;
+  }
   std::vector<int> *getEdgeSelectionArray() { return &edge_selection_array; }
 
   std::string getMeshName(Mesh *mesh) { return mesh_to_name[mesh]; }

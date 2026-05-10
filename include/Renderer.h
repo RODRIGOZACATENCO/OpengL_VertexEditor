@@ -17,6 +17,8 @@ struct FramebufferInfo {
   unsigned int texture;
   unsigned int DBO;
 };
+
+enum Render_type { main_render_pass, selection_render_pass };
 enum Shader_names {
   default_color_pass,
   face_color_pass,
@@ -69,13 +71,18 @@ public:
   int getHeight() const { return height; }
 
   // Methods
-  void selectionBufferPass();
+
+  // setups common data for all types of render
+  void processDrawCall(Render_type type_of_render);
+
+  void selectionRenderPass();
   void mainRenderPass();
   void FramebufferSetup();
   void shaderSetup();
   void resizeFramebuffer();
   void setViewProjectionMatrices();
-  void updateModelMatrices();//updates all given model matrices, for now
+  void updateModelMatrices(); // updates all given model matrices, for now
+
   void cleanup();
   bool rendererIsReady(std::string *out_error = nullptr) const;
   std::optional<std::tuple<unsigned int, unsigned int, unsigned int>>

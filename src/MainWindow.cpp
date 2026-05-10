@@ -51,7 +51,7 @@ void MainWindow::use(std::string *scene_name) {
 
       // 3. RENDER SCENE AND UI
       renderer->mainRenderPass();
-      renderer->selectionBufferPass();
+      renderer->selectionRenderPass();
       gui.showMainWindowGUI();
 
       // glfwPollEvents(); <-- REMOVE FROM HERE
@@ -106,7 +106,7 @@ void MainWindow::onMouseButton(int button, int action, int mods) {
 
   // switches the current drawing state of the renderer
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-    renderer->selectionBufferPass();
+    renderer->selectionRenderPass();
     auto result = renderer->meshElementDetection();
     renderer->setRenderMode(gui.getCurrentState());
 
