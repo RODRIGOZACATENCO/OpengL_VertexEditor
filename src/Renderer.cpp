@@ -3,7 +3,6 @@
 //
 
 #include "../include/Renderer.h"
-#include "../OpenGL_include/TextureHandler.h"
 #include "GUI.h"
 
 #include <GLFW/glfw3.h>
@@ -12,35 +11,33 @@
 #include <vector>
 
 void Renderer::processDrawCall(Render_type type_of_render) {
-  // vertex needs to be reseted each frame;
-  auto *reset = current_scene->getVertexAlreadyRenderedArray();
-  std::fill(reset->begin(), reset->end(), 0);
-
   updateModelMatrices();
   setViewProjectionMatrices();
   glfwGetFramebufferSize(window, (&width), &height);
   glViewport(0, 0, width, height);
-
   switch (type_of_render) {
   case main_render_pass:
     mainRenderPass();
     break;
 
-  case selection_render_pass:
-    selectionRenderPass();
+  case element_detection_pass:
+    current_scene->resetVertexAlreadyRendered();
+    elementDetectionPass();
     break;
   }
 }
 
-void Renderer::selectionRenderPass() {
+void Renderer::elementDetectionPass() {
 
   glBindFramebuffer(GL_FRAMEBUFFER, element_detection_framebuffer_info.FBO);
-  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+  glClearColor(0.0, 0.0, 0.0, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
+  glFrontFace(GL_CCW);
   glEnable(GL_PROGRAM_POINT_SIZE); // enable setting point size in the shader
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   unsigned int mesh_id = 0;
+
   switch (render_mode) {
   case FACE_EDITING:
     shaders[face_detection]->use();
@@ -58,13 +55,16 @@ void Renderer::selectionRenderPass() {
 
   case VERTEX_EDITING:
     shaders[vertex_detection]->use();
+    unsigned int vertex_offset=0;
     for (const auto &mesh_ptr : current_scene->getMeshes()) {
       Mesh *mesh = mesh_ptr.get();
       RenderInfo ri = current_scene->getRenderInfo(mesh);
       shaders[vertex_detection]->setMat4("model", ri.model);
       shaders[vertex_detection]->setUint("MeshID", mesh_id++);
+      shaders[vertex_detection]->setUint("vertex_offset",vertex_offset);
+      vertex_offset+=mesh->getVertices().size();
       glBindVertexArray(ri.VAO);
-      glDrawElements(GL_POINTS, mesh->getFaceRenderIndices().size(),
+      glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(),
                      GL_UNSIGNED_INT, 0);
       glBindVertexArray(0);
     }
@@ -89,20 +89,17 @@ void Renderer::selectionRenderPass() {
 }
 
 void Renderer::mainRenderPass() {
-  updateModelMatrices();
-  setViewProjectionMatrices(); //@TODO check later
   std::string error;
   if (!rendererIsReady(&error)) {
     std::cout << "Renderer is not ready" << std::endl;
     std::cout << error << std::endl;
     return;
   }
-  glfwGetFramebufferSize(window, &width, &height);
-  glViewport(0, 0, width, height);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
+  glFrontFace(GL_CCW);
   glEnable(GL_CULL_FACE);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glEnable(GL_PROGRAM_POINT_SIZE);
@@ -121,11 +118,11 @@ void Renderer::mainRenderPass() {
     shaders[default_color_pass]->setMat4("model", ri.model);
     shaders[default_color_pass]->setInt("num_faces_offset", face_offset);
     face_offset += mesh->getFaces().size();
-    glDepthMask(GL_FALSE);
+
     glBindVertexArray(ri.VAO);
     glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(),
                    GL_UNSIGNED_INT, 0);
-    glDepthMask(GL_TRUE);
+
 
     if (render_mode == VERTEX_EDITING) {
       shaders[vertex_color_pass]->use();
@@ -161,8 +158,8 @@ void Renderer::FramebufferSetup() {
   // it's a texture that will cover the entire viewport
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32UI, width, height, 0, GL_RGB_INTEGER,
                GL_UNSIGNED_INT, nullptr);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   // binds the texture to the framebuffer
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                          element_detection_framebuffer_info.texture, 0);
@@ -184,6 +181,7 @@ void Renderer::setViewProjectionMatrices() {
 
   for (int i = 0; i < shaders.size(); i++) {
     if (shaders[i]) {
+      shaders[i]->use();
       shaders[i]->setMat4("view_projection",
                           current_scene->getViewProjectionMatrix());
 
@@ -239,6 +237,7 @@ void Renderer::shaderSetup() {
   //@TODO i need to add the geom to the vertex_detection shader
   shaders[Shader_names::vertex_detection] =
       std::make_unique<Shader>(vertex_detection_dir + "vertexDetection.vert",
+                                vertex_detection_dir+"vertexDetection.geom",
                                vertex_detection_dir + "vertexDetection.frag");
   /*
 shaders[Shader_names::edge_detection] =

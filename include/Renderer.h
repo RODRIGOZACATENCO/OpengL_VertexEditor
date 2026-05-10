@@ -18,7 +18,7 @@ struct FramebufferInfo {
   unsigned int DBO;
 };
 
-enum Render_type { main_render_pass, selection_render_pass };
+enum Render_type { main_render_pass, element_detection_pass };
 enum Shader_names {
   default_color_pass,
   face_color_pass,
@@ -75,7 +75,7 @@ public:
   // setups common data for all types of render
   void processDrawCall(Render_type type_of_render);
 
-  void selectionRenderPass();
+  void elementDetectionPass();
   void mainRenderPass();
   void FramebufferSetup();
   void shaderSetup();

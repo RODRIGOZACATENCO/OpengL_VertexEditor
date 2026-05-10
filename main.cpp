@@ -2,19 +2,11 @@
 #include <GLFW/glfw3.h>
 
 // Shared headers from your global directory
-#include <random>
-
 #include "MainWindow.h"
-
-#include "ShaderHandler.h"
-#include "TextureHandler.h"
-
-
-#include "GUI.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include "Renderer.h"
+
 
 int main()
 {

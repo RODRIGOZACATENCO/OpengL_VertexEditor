@@ -5,6 +5,7 @@
 #include <glad/glad.h>
 
 #include "../include/MainWindow.h"
+#include "Renderer.h"
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>
@@ -50,8 +51,8 @@ void MainWindow::use(std::string *scene_name) {
       ImGui::NewFrame();
 
       // 3. RENDER SCENE AND UI
-      renderer->mainRenderPass();
-      renderer->selectionRenderPass();
+      renderer->processDrawCall(main_render_pass);
+      renderer->processDrawCall(element_detection_pass);
       gui.showMainWindowGUI();
 
       // glfwPollEvents(); <-- REMOVE FROM HERE
@@ -106,7 +107,7 @@ void MainWindow::onMouseButton(int button, int action, int mods) {
 
   // switches the current drawing state of the renderer
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-    renderer->selectionRenderPass();
+    renderer->processDrawCall(element_detection_pass);
     auto result = renderer->meshElementDetection();
     renderer->setRenderMode(gui.getCurrentState());
 

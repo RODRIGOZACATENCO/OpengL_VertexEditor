@@ -3,6 +3,7 @@
 //
 
 #include "../include/Scene.h"
+
 #include <glad/glad.h>
 void Scene::updateFacesSelected(unsigned int face_id, unsigned int mesh_id) {
   unsigned int global_face_id = 0;
@@ -38,7 +39,12 @@ void Scene::updateEdgesSelected(unsigned int edge_id, unsigned int mesh_id) {
       !edge_selection_array[global_id + edge_id];
   updateSelectionBuffer(EDGE_EDITING);
 }
-
+void Scene::resetVertexAlreadyRendered(){
+    std::fill(vertex_already_rendered_array.begin(), vertex_already_rendered_array.end(), 0);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER,vertex_already_rendered_ssbo);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER,0,vertex_already_rendered_array.size()*sizeof(int),vertex_already_rendered_array.data());
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER,0);
+  }
 void Scene::resetSelectionBuffer(GUIState type) {
   switch (type) {
   case FACE_EDITING:
@@ -97,11 +103,12 @@ void Scene::meshArraysSetup(Mesh *mesh) {
 
   glGenBuffers(1, &vertex_already_rendered_ssbo);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, vertex_already_rendered_ssbo);
+
   glBufferData(GL_SHADER_STORAGE_BUFFER,
                vertex_already_rendered_array.size() * sizeof(int),
-               vertex_selection_array.data(), GL_DYNAMIC_DRAW);
+               vertex_already_rendered_array.data(), GL_DYNAMIC_DRAW);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, vertex_already_rendered_ssbo);
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, 1);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
 /*Setup all the meshes RenderInfo to show on the screen */

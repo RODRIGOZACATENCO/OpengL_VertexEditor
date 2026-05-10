@@ -119,6 +119,7 @@ public:
   void updateSelectionBuffer(GUIState state);
   void resetSelectionBuffer(GUIState type);
   void meshRenderSetup(Mesh *mesh);
+  void resetVertexAlreadyRendered();
   void updateFacesSelected(unsigned int face_id, unsigned int mesh_id);
   void updateVerticesSelected(unsigned int vertex_id, unsigned int mesh_id);
   void updateEdgesSelected(unsigned int edge_id, unsigned int mesh_id);

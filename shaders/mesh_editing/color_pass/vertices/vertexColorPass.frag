@@ -20,7 +20,7 @@ void main()
     if(length(coord) > radius){
         discard;
     }
-    FragColor = vec4(0.8, 0.2, 0.2, 1.0);
+    FragColor = vec4(0.165, 0.871, 0.878,1.0);
     }
     else{
         discard;
