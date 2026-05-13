@@ -55,14 +55,15 @@ void Renderer::elementDetectionPass() {
 
   case VERTEX_EDITING:
     shaders[vertex_detection]->use();
-    unsigned int vertex_offset=0;
+    unsigned int vertex_offset = 0;
     for (const auto &mesh_ptr : current_scene->getMeshes()) {
       Mesh *mesh = mesh_ptr.get();
       RenderInfo ri = current_scene->getRenderInfo(mesh);
       shaders[vertex_detection]->setMat4("model", ri.model);
       shaders[vertex_detection]->setUint("MeshID", mesh_id++);
-      shaders[vertex_detection]->setUint("vertex_offset",vertex_offset);
-      vertex_offset+=mesh->getVertices().size();
+
+      shaders[vertex_detection]->setUint("vertex_offset", vertex_offset);
+      vertex_offset += mesh->getVertices().size();
       glBindVertexArray(ri.VAO);
       glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(),
                      GL_UNSIGNED_INT, 0);
@@ -122,7 +123,6 @@ void Renderer::mainRenderPass() {
     glBindVertexArray(ri.VAO);
     glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(),
                    GL_UNSIGNED_INT, 0);
-
 
     if (render_mode == VERTEX_EDITING) {
       shaders[vertex_color_pass]->use();
@@ -237,7 +237,7 @@ void Renderer::shaderSetup() {
   //@TODO i need to add the geom to the vertex_detection shader
   shaders[Shader_names::vertex_detection] =
       std::make_unique<Shader>(vertex_detection_dir + "vertexDetection.vert",
-                                vertex_detection_dir+"vertexDetection.geom",
+                               vertex_detection_dir + "vertexDetection.geom",
                                vertex_detection_dir + "vertexDetection.frag");
   /*
 shaders[Shader_names::edge_detection] =

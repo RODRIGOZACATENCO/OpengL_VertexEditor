@@ -8,6 +8,9 @@ int vertices_already_rendered[];
 layout(triangles) in;
 layout(points,max_vertices=3) out;
 
+
+flat in vec3 normal[];//normal vectors of each vertex
+
 uniform uint vertex_offset;
 
 flat in uint vertexID_out[];
@@ -29,6 +32,7 @@ void main(){
         gl_in[2].gl_Position
         };
 
+    
     //transform the vertices into 2D space
     vec2 NDC[3]={
         vertices[0].xy/vertices[0].w,
@@ -41,6 +45,7 @@ void main(){
 
     //positive if triangle is front facing
     float winding=direction1.x*direction2.y-direction1.y*direction2.x;
+
 
     if(winding>0.0){
         for(int i=0;i<3;i++){

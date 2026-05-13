@@ -5,12 +5,14 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <map>
+#include <tuple>
 #include <vector>
 
 struct HalfEdge;
 struct Vertex {
   glm::vec3 point;
   int halfedge;
+  glm::vec3 normal; // average across all faces
 };
 
 struct Edge {
@@ -19,6 +21,7 @@ struct Edge {
 
 struct Face {
   int halfedge;
+  glm::vec3 normal;
 };
 
 struct HalfEdge {
@@ -41,6 +44,12 @@ public:
   void show_mesh_structure();
   void setupFaceRenderIndices();
   void setupEdgeRenderIndices();
+  void computevertexNormalVectors();
+  void computeFaceNormalVectors();
+
+  // given an edge, will return a set of 6 vertices 3 for face 1 and 3 for face
+  // 2
+  std::vector<glm::vec3> getFacesAssociatedwithEdge(HalfEdge *edge);
 
   // Getters
   const std::vector<HalfEdge> &getHalfEdges() const { return half_edges; }
@@ -54,6 +63,21 @@ public:
     return edge_render_indices;
   }
 
+  HalfEdge &halfedgeFromIndex(unsigned int index) { return half_edges[index]; }
+  Vertex &vertexFromIndex(unsigned int index) { return vertices[index]; }
+  Edge &edgeFromIndex(unsigned int index) { return edges[index]; }
+
+  std::tuple<unsigned int, unsigned int, unsigned int>
+  vertexIndicesFromFace(Face face) {
+    HalfEdge start_halfedge = half_edges[face.halfedge];
+    unsigned int vertex1 = start_halfedge.vertex;
+    start_halfedge = half_edges[start_halfedge.next];
+    unsigned int vertex2 = start_halfedge.vertex;
+    start_halfedge = half_edges[start_halfedge.next];
+    unsigned int vertex3 = start_halfedge.vertex;
+    return {vertex1, vertex2, vertex3};
+  }
+
 private:
   std::vector<HalfEdge> half_edges;
   std::vector<Face> faces;
@@ -63,6 +87,5 @@ private:
   std::vector<unsigned int> face_render_indices;
   std::vector<unsigned int> edge_render_indices;
   std::vector<glm::vec3> colors;
-
   glm::vec3 randomRGB();
 };

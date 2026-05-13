@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <glm/ext/matrix_float4x4.hpp>
 #include <glm/glm.hpp>
 #include <map>
 #include <memory>
@@ -27,7 +28,8 @@ struct RenderInfo {
   unsigned int EBO;
   unsigned int edge_VAO;
   unsigned int edge_EBO;
-
+  unsigned int edge_VBO;
+  std::vector<glm::vec3> VBO_information; // vec3 vertex(3), vec3 face_normal(1)
   glm::mat4 model;
 };
 class Scene {
@@ -113,8 +115,9 @@ public:
     return &vertex_already_rendered_array;
   }
   std::vector<int> *getEdgeSelectionArray() { return &edge_selection_array; }
-
   std::string getMeshName(Mesh *mesh) { return mesh_to_name[mesh]; }
+  glm::mat3 getNormalMatrixFromModel(glm::mat4 model_matrix);
+
   void meshArraysSetup(Mesh *mesh);
   void updateSelectionBuffer(GUIState state);
   void resetSelectionBuffer(GUIState type);
@@ -123,5 +126,7 @@ public:
   void updateFacesSelected(unsigned int face_id, unsigned int mesh_id);
   void updateVerticesSelected(unsigned int vertex_id, unsigned int mesh_id);
   void updateEdgesSelected(unsigned int edge_id, unsigned int mesh_id);
+
+  glm::mat4 updateNormalMatrix();
   void cleanup();
 };

@@ -5,6 +5,9 @@
 #include "../include/Scene.h"
 
 #include <glad/glad.h>
+#include <glm/matrix.hpp>
+#include <iostream>
+#include <vector>
 void Scene::updateFacesSelected(unsigned int face_id, unsigned int mesh_id) {
   unsigned int global_face_id = 0;
   for (int i = 0; i < mesh_id; i++) {
@@ -39,12 +42,15 @@ void Scene::updateEdgesSelected(unsigned int edge_id, unsigned int mesh_id) {
       !edge_selection_array[global_id + edge_id];
   updateSelectionBuffer(EDGE_EDITING);
 }
-void Scene::resetVertexAlreadyRendered(){
-    std::fill(vertex_already_rendered_array.begin(), vertex_already_rendered_array.end(), 0);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER,vertex_already_rendered_ssbo);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER,0,vertex_already_rendered_array.size()*sizeof(int),vertex_already_rendered_array.data());
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER,0);
-  }
+void Scene::resetVertexAlreadyRendered() {
+  std::fill(vertex_already_rendered_array.begin(),
+            vertex_already_rendered_array.end(), 0);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, vertex_already_rendered_ssbo);
+  glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+                  vertex_already_rendered_array.size() * sizeof(int),
+                  vertex_already_rendered_array.data());
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
 void Scene::resetSelectionBuffer(GUIState type) {
   switch (type) {
   case FACE_EDITING:
@@ -120,10 +126,19 @@ void Scene::meshRenderSetup(Mesh *mesh) {
   glGenBuffers(1, &ri->VBO);
   glGenBuffers(1, &ri->EBO);
   glGenBuffers(1, &ri->edge_EBO);
+  glGenBuffers(1, &ri->edge_VBO);
+  // generates the VBO vector in render info
+  auto vertices = mesh->getVertices();
+  auto mesh_faces = mesh->getFaceRenderIndices();
+  auto faceIndices = mesh->getFaceRenderIndices();
+
+  for (int i = 0; i < vertices.size(); i++) {
+    ri->VBO_information.push_back(vertices[i].point);
+  }
   // send the vertex data to the GPU
   glBindBuffer(GL_ARRAY_BUFFER, ri->VBO);
-  glBufferData(GL_ARRAY_BUFFER, mesh->getVertices().size() * sizeof(Vertex),
-               mesh->getVertices().data(), GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, ri->VBO_information.size() * sizeof(glm::vec3),
+               ri->VBO_information.data(), GL_STATIC_DRAW);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ri->EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                mesh->getFaceRenderIndices().size() * sizeof(unsigned int),
@@ -133,21 +148,25 @@ void Scene::meshRenderSetup(Mesh *mesh) {
                mesh->getEdgeRenderIndices().size() * sizeof(unsigned int),
                mesh->getEdgeRenderIndices().data(), GL_STATIC_DRAW);
 
-  // setup face VAO
+  // setup face and vertex VAO
   glBindVertexArray(ri->VAO);
   glBindBuffer(GL_ARRAY_BUFFER, ri->VBO);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ri->EBO);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                        (void *)offsetof(Vertex, point));
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3),
+                        (void *)0); // vertex information
   glEnableVertexAttribArray(0);
   glBindVertexArray(0);
 
-  // setup edge VAO
+  // setup edge VAO and vbo
+  // the edge detection needs to know wich edges are in view
+  // data structure: (line,face1,face2), faces that touch that edge
+  //(l1,l2,f11,f12,f13,f21,f22,f23), one per edge, with an EBO
   glBindVertexArray(ri->edge_VAO);
   glBindBuffer(GL_ARRAY_BUFFER, ri->VBO);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ri->edge_EBO);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                         (void *)offsetof(Vertex, point));
+
   glEnableVertexAttribArray(0);
   glBindVertexArray(0);
 }
@@ -187,6 +206,10 @@ void Scene::updateSelectionBuffer(GUIState state) {
   default:
     break;
   }
+}
+
+glm::mat3 Scene::getNormalMatrixFromModel(glm::mat4 model_matrix) {
+  return glm::transpose(glm::inverse(glm::mat3(model_matrix)));
 }
 
 void Scene::cleanup() {

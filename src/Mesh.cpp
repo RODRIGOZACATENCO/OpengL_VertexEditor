@@ -3,6 +3,8 @@
 //
 
 #include <Mesh.h>
+#include <glm/ext/vector_float3.hpp>
+#include <glm/geometric.hpp>
 #include <glm/glm.hpp>
 #include <iostream>
 #include <random>
@@ -14,7 +16,9 @@ void Mesh::process_mesh(std::vector<float> *input_vertices,
                         std::vector<int> *input_faces) {
   int current_face_index = 0, current_halfedge_index = 0,
       current_edge_index = 0;
+
   // preprocess all vertices
+
   for (int i = 0; i < input_vertices->size(); i += 3) {
     Vertex vertex;
     vertex.point = glm::vec3((*input_vertices)[i], (*input_vertices)[i + 1],
@@ -26,6 +30,7 @@ void Mesh::process_mesh(std::vector<float> *input_vertices,
   for (int i = 0; i < input_faces->size(); i += 3) {
     // first create the face that will represent 3 vertices
     Face face;
+
     // extract the indices of the vertices that form the face i
     // index of vertices that form the face e.g. {0,1,2} vertex 0 ,vertex 1,
     // vertex 2
@@ -38,6 +43,7 @@ void Mesh::process_mesh(std::vector<float> *input_vertices,
       HalfEdge half_edge;
       half_edge.vertex = vertex_indices[j]; // assign vertex
       half_edge.face = current_face_index;  // assign face
+
       if (vertices[vertex_indices[j]].halfedge == -1)
         vertices[vertex_indices[j]].halfedge = current_halfedge_index + j;
 
@@ -68,8 +74,8 @@ void Mesh::process_mesh(std::vector<float> *input_vertices,
        */
       int current_vertex = vertex_indices[j],
           next_vertex = vertex_indices[(j + 1) % 3];
-      // twin exists, csecond=model;heck if there's an edge already in the
-      // opposite direction if it exists ,it's halfedge must be the twin half
+      // twin exists, check if there's an edge already in the
+      // opposite direction :if it exists ,it's halfedge must be the twin half
       // edge
       if (edge_lookup.contains({next_vertex, current_vertex})) {
 
@@ -95,10 +101,53 @@ void Mesh::process_mesh(std::vector<float> *input_vertices,
     }
     current_halfedge_index += 3;
     current_face_index++;
+    // precalculates the normal vector from the face
+
     faces.push_back(face);
   }
 }
+/*given the complete mesh, calculate the normal vector of each vertex
+ taking the average normal across all faces */
+void Mesh::computevertexNormalVectors() {
+  for (auto &vertex : vertices) {
+    // starting face to test
+    glm::vec3 sum = glm::vec3(0.0f);
+    unsigned int count = 0, check_backwards = 0;
+    HalfEdge *start_halfedge = &half_edges[vertex.halfedge];
+    auto current_halfedge = start_halfedge;
+    do {
+      sum += faces[current_halfedge->face].normal;
+      count++;
+      if (current_halfedge->twin == -1) {
+        check_backwards = true;
+        break;
+      }
+      current_halfedge = &half_edges[half_edges[current_halfedge->twin].next];
+    } while (current_halfedge != start_halfedge);
 
+    if (check_backwards) {
+      current_halfedge = start_halfedge;
+      do {
+        if (half_edges[current_halfedge->prev].twin == -1)
+          break;
+        current_halfedge = &half_edges[half_edges[current_halfedge->prev].twin];
+        sum += faces[current_halfedge->face].normal;
+        count++;
+      } while (true);
+    }
+    vertex.normal = glm::normalize(sum / (float)count);
+  }
+}
+
+void Mesh::computeFaceNormalVectors() {
+  for (auto &face : faces) {
+    auto [vertex1, vertex2, vertex3] = vertexIndicesFromFace(face);
+    glm::vec3 direction1 = vertices[vertex2].point - vertices[vertex1].point;
+    glm::vec3 direction2 = vertices[vertex3].point - vertices[vertex1].point;
+    glm::vec3 normal = glm::normalize(glm::cross(direction1, direction2));
+    face.normal = normal;
+  }
+}
 void Mesh::show_mesh_structure() {
   std::cout << "EDGES: " << edges.size() << std::endl;
   int i = 0;
@@ -148,9 +197,6 @@ void Mesh::setupEdgeRenderIndices() {
     edge_render_indices.push_back(
         half_edges[half_edges[halfedge_index].next].vertex);
   }
-  for (auto i : edge_render_indices)
-    std::cout << i << " ";
-  std::cout << std::endl;
 }
 glm::vec3 Mesh::randomRGB() {
   // 1. Set up the random number generator (do this statically so it's only
@@ -167,4 +213,22 @@ glm::vec3 Mesh::randomRGB() {
   float b = dis(gen);
 
   return glm::vec3(r, g, b);
+}
+
+std::vector<glm::vec3> Mesh::getFacesAssociatedwithEdge(HalfEdge *edge) {
+  std::vector<glm::vec3> face_vertices;
+  HalfEdge *current_index = edge;
+  // for the main half edges
+  for (int i = 0; i < 3; i++) {
+    glm::vec3 vertex = vertices[current_index->vertex].point;
+    face_vertices.push_back(vertex);
+    current_index = &half_edges[current_index->next];
+  }
+
+  // for the twin
+  for (int i = 0; i < 3; i++) {
+    glm::vec3 vertex = vertices[current_index->vertex].point;
+    face_vertices.push_back(vertex);
+    current_index = &half_edges[current_index->next];
+  }
 }
