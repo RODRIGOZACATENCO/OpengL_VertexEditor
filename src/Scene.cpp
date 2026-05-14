@@ -83,6 +83,7 @@ void Scene::meshArraysSetup(Mesh *mesh) {
   for (int i = 0; i < mesh->getEdges().size(); i++) {
     edge_selection_array.push_back(0);
   }
+
   // Setup the combined face selection array to color selection on the window
   std::vector<int> combined_selection_array;
   combined_selection_array.reserve(face_selection_array.size() +
@@ -132,8 +133,10 @@ void Scene::meshRenderSetup(Mesh *mesh) {
   auto mesh_faces = mesh->getFaceRenderIndices();
   auto faceIndices = mesh->getFaceRenderIndices();
 
+  // setup of VBO_information of each mesh
   for (int i = 0; i < vertices.size(); i++) {
     ri->VBO_information.push_back(vertices[i].point);
+    ri->VBO_information.push_back(vertices[i].normal);
   }
   // send the vertex data to the GPU
   glBindBuffer(GL_ARRAY_BUFFER, ri->VBO);
@@ -152,9 +155,12 @@ void Scene::meshRenderSetup(Mesh *mesh) {
   glBindVertexArray(ri->VAO);
   glBindBuffer(GL_ARRAY_BUFFER, ri->VBO);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ri->EBO);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3),
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec3),
                         (void *)0); // vertex information
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec3),
+                        (void *)(sizeof(glm::vec3))); // vertex information
   glEnableVertexAttribArray(0);
+  glEnableVertexAttribArray(1);
   glBindVertexArray(0);
 
   // setup edge VAO and vbo

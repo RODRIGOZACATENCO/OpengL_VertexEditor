@@ -38,6 +38,8 @@ public:
     process_mesh(vertices, faces);
     setupFaceRenderIndices();
     setupEdgeRenderIndices();
+    computeFaceNormalVectors();
+    computevertexNormalVectors();
   }
 
   void process_mesh(std::vector<float> *vertices, std::vector<int> *faces);

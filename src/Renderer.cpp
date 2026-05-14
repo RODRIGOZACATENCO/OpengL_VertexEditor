@@ -60,8 +60,11 @@ void Renderer::elementDetectionPass() {
       Mesh *mesh = mesh_ptr.get();
       RenderInfo ri = current_scene->getRenderInfo(mesh);
       shaders[vertex_detection]->setMat4("model", ri.model);
+      shaders[vertex_detection]->setMat4("projection",
+                                         current_scene->getProjectionMatrix());
+      shaders[vertex_detection]->setMat3(
+          "normal_matrix", current_scene->getNormalMatrixFromModel(ri.model));
       shaders[vertex_detection]->setUint("MeshID", mesh_id++);
-
       shaders[vertex_detection]->setUint("vertex_offset", vertex_offset);
       vertex_offset += mesh->getVertices().size();
       glBindVertexArray(ri.VAO);

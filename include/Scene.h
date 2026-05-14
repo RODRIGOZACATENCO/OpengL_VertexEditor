@@ -29,7 +29,7 @@ struct RenderInfo {
   unsigned int edge_VAO;
   unsigned int edge_EBO;
   unsigned int edge_VBO;
-  std::vector<glm::vec3> VBO_information; // vec3 vertex(3), vec3 face_normal(1)
+  std::vector<glm::vec3> VBO_information; //(vertex,normal)
   glm::mat4 model;
 };
 class Scene {
