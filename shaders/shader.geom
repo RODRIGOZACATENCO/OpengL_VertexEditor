@@ -5,7 +5,8 @@ layout (triangle_strip, max_vertices = 3) out;
 flat out uint faceID;
 out vec3 Barycentric;
 
-void main()
+void main()void main()
+
 {
     faceID = gl_PrimitiveIDIn;
 

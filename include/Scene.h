@@ -29,7 +29,7 @@ struct RenderInfo {
   unsigned int edge_VAO;
   unsigned int edge_EBO;
   unsigned int edge_VBO;
-  std::vector<glm::vec3> VBO_information; //(vertex,normal)
+  std::vector<glm::vec3> VBO_faces_vertices_data; //(vertex,normal)
   glm::mat4 model;
 };
 class Scene {
@@ -41,13 +41,14 @@ private:
   std::vector<int> vertex_selection_array;
   std::vector<int> edge_selection_array;
 
+  unsigned int face_normal_vectors_SSBO = 0;
+  std::vector<glm::vec3> face_normal_vectors_data;
   /*array that the vertex shaders use to determine wich vertices are already
 drawn, because vertex pass uses GL_TRIANGLES to draw
+it combines all vertices index to check if alreay rendered, of all meshes,
+Into a single vector ,index offset needed per mesh
 */
-  unsigned int vertex_already_rendered_ssbo = 0;
-
-  // it combines all vertices index to check if alreay rendered, of all meshes,
-  // into a single vector index offset needed per mesh
+  unsigned int vertex_already_rendered_SSBO = 0;
   std::vector<int> vertex_already_rendered_array;
 
   unsigned int total_meshes = 0;

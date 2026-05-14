@@ -85,6 +85,9 @@ private:
   std::vector<Face> faces;
   std::vector<Vertex> vertices;
   std::vector<Edge> edges;
+
+  // given a pair of 2 vertices, returns the index the edge at those vertices
+  // only one entry per edge ,so it can be (1,2) or (2,1)
   std::map<std::pair<int, int>, int> edge_lookup;
   std::vector<unsigned int> face_render_indices;
   std::vector<unsigned int> edge_render_indices;

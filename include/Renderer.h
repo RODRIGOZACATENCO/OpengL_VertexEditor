@@ -58,7 +58,6 @@ public:
 
   void setCurrentScene(Scene *scene) {
     this->current_scene = scene;
-    std::cout << "asldnashasjdjkbjasdbbjasasdkbabasd" << std::endl;
     setViewProjectionMatrices();
   }
   Scene *getCurrentScene() { return current_scene; }
