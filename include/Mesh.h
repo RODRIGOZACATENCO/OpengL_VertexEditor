@@ -49,9 +49,8 @@ public:
   void computevertexNormalVectors();
   void computeFaceNormalVectors();
 
-  // given an edge, will return a set of 6 vertices 3 for face 1 and 3 for face
-  // 2
-  std::vector<glm::vec3> getFacesAssociatedwithEdge(HalfEdge *edge);
+  // given an edge, will return the face indices of the faces the edge touches
+  std::pair< int,  int> getFaceIndicesAssociatedWithEdge(unsigned int edge_index);
 
   // Getters
   const std::vector<HalfEdge> &getHalfEdges() const { return half_edges; }
@@ -64,7 +63,9 @@ public:
   const std::vector<unsigned int> &getEdgeRenderIndices() const {
     return edge_render_indices;
   }
-
+  const std::map<std::pair<int, int>, int> &getEdgeLookup() const{
+    return  edge_lookup;
+  }
   HalfEdge &halfedgeFromIndex(unsigned int index) { return half_edges[index]; }
   Vertex &vertexFromIndex(unsigned int index) { return vertices[index]; }
   Edge &edgeFromIndex(unsigned int index) { return edges[index]; }

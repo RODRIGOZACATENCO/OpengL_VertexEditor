@@ -55,7 +55,6 @@ void MainWindow::use(std::string *scene_name) {
       renderer->processDrawCall(element_detection_pass);
       gui.showMainWindowGUI();
 
-      // glfwPollEvents(); <-- REMOVE FROM HERE
       glfwSwapBuffers(window);
     }
   } else {

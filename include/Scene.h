@@ -21,14 +21,17 @@
  *render information of each mesh (VAO,VBO,EBO, etc )
  *
  */
-
+//pair of face normals for each pair of vertices in an edge
+struct EdgeNormals{
+  glm::vec4 face_normal_1;
+  glm::vec4 face_normal_2;
+};
 struct RenderInfo {
   unsigned int VAO;
   unsigned int VBO;
   unsigned int EBO;
   unsigned int edge_VAO;
   unsigned int edge_EBO;
-  unsigned int edge_VBO;
   std::vector<glm::vec3> VBO_faces_vertices_data; //(vertex,normal)
   glm::mat4 model;
 };
@@ -41,8 +44,13 @@ private:
   std::vector<int> vertex_selection_array;
   std::vector<int> edge_selection_array;
 
+  // array that the shaders use to determine what elements of the mesh are
+  // currently selected
+  unsigned int selected_elements_SSBO = 0;
   unsigned int face_normal_vectors_SSBO = 0;
-  std::vector<glm::vec3> face_normal_vectors_data;
+  //structured in the same order as edge_render_indices i the mesh
+  std::vector<EdgeNormals> face_normal_vectors_data;
+
   /*array that the vertex shaders use to determine wich vertices are already
 drawn, because vertex pass uses GL_TRIANGLES to draw
 it combines all vertices index to check if alreay rendered, of all meshes,
@@ -56,9 +64,6 @@ Into a single vector ,index offset needed per mesh
   std::map<Mesh *, std::string> mesh_to_name;
   std::vector<std::unique_ptr<Mesh>> meshes;
 
-  // array that the shaders use to determine what elements of the mesh are
-  // currently selected
-  unsigned int selected_elements_ssbo = 0;
 
 public:
   bool sceneIsReady(std::string *out_error = nullptr) const;
@@ -76,7 +81,7 @@ public:
     meshes.push_back(std::move(mesh));
     mesh_to_name[mesh_ptr] = name;
     total_meshes++;
-    meshRenderSetup(mesh_ptr);
+    meshRenderInfoSetup(mesh_ptr);
     meshArraysSetup(mesh_ptr);
   }
 
@@ -122,7 +127,7 @@ public:
   void meshArraysSetup(Mesh *mesh);
   void updateSelectionBuffer(GUIState state);
   void resetSelectionBuffer(GUIState type);
-  void meshRenderSetup(Mesh *mesh);
+  void meshRenderInfoSetup(Mesh *mesh);
   void resetVertexAlreadyRendered();
   void updateFacesSelected(unsigned int face_id, unsigned int mesh_id);
   void updateVerticesSelected(unsigned int vertex_id, unsigned int mesh_id);

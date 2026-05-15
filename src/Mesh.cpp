@@ -106,6 +106,7 @@ void Mesh::process_mesh(std::vector<float> *input_vertices,
     faces.push_back(face);
   }
 }
+
 /*given the complete mesh, calculate the normal vector of each vertex
  taking the average normal across all faces */
 void Mesh::computevertexNormalVectors() {
@@ -215,20 +216,9 @@ glm::vec3 Mesh::randomRGB() {
   return glm::vec3(r, g, b);
 }
 
-std::vector<glm::vec3> Mesh::getFacesAssociatedwithEdge(HalfEdge *edge) {
-  std::vector<glm::vec3> face_vertices;
-  HalfEdge *current_index = edge;
-  // for the main half edges
-  for (int i = 0; i < 3; i++) {
-    glm::vec3 vertex = vertices[current_index->vertex].point;
-    face_vertices.push_back(vertex);
-    current_index = &half_edges[current_index->next];
-  }
-
-  // for the twin
-  for (int i = 0; i < 3; i++) {
-    glm::vec3 vertex = vertices[current_index->vertex].point;
-    face_vertices.push_back(vertex);
-    current_index = &half_edges[current_index->next];
-  }
+std::pair< int, int> Mesh::getFaceIndicesAssociatedWithEdge(unsigned int edge_index) {
+   int face_1=half_edges[edges[edge_index].halfedge].face;
+   int face_2=(half_edges[edges[edge_index].halfedge].twin !=-1 ) 
+   ? face_2=half_edges[half_edges[edges[edge_index].halfedge].twin].face : -1;
+   return{face_1,face_2};
 }

@@ -39,7 +39,7 @@ void main(){
 
         vec2 direction=ndc1-ndc2;
         vec2 perpendicular=normalize(vec2(direction.y,-direction.x));
-        float thickness=0.02;
+        float thickness=0.01;
 
         vec2 offset1 = ndc1 + (thickness / 2) * perpendicular;
         vec2 offset2 = ndc1 - (thickness / 2) * perpendicular;

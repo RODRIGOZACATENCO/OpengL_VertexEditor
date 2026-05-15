@@ -20,7 +20,6 @@ struct FramebufferInfo {
 
 enum Render_type { main_render_pass, element_detection_pass };
 enum Shader_names {
-  default_color_pass,
   face_color_pass,
   edge_color_pass,
   vertex_color_pass,
@@ -36,7 +35,7 @@ enum Shader_names {
 class Renderer {
 private:
   Scene *current_scene; // scene currently being drawn
-  GUIState render_mode; // FACE, VERTEX OR EDGE EDITING
+  GUIState current_rendering_mode; // FACE, VERTEX OR EDGE EDITING
   GLFWwindow *window;
   int width, height;
   std::vector<std::unique_ptr<Shader>> shaders; // holds all the shaders
@@ -62,8 +61,8 @@ public:
   }
   Scene *getCurrentScene() { return current_scene; }
 
-  void setRenderMode(GUIState state) { this->render_mode = state; }
-  GUIState getRenderMode() const { return render_mode; }
+  void setRenderMode(GUIState state) { this->current_rendering_mode = state; }
+  GUIState getRenderMode() const { return current_rendering_mode; }
 
   GLFWwindow *getWindow() const { return window; }
   int getWidth() const { return width; }

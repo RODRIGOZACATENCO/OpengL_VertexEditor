@@ -13,7 +13,7 @@
 void GUI::showMainWindowGUI()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	ImGui::Begin("My Tools");
+	ImGui::Begin("Editing Tools");
 
 	bool faceActive = main_state.isFaceSelectionActive;
 	bool vertexActive = main_state.isVertexSelectionActive;
@@ -30,7 +30,7 @@ void GUI::showMainWindowGUI()
 
 	if (ImGui::Button(faceActive ? "ON##face" : "OFF##face"))
 	{
-		std::cout<<"faceeeee";
+
 		setState(FACE_EDITING);
 	}
 	ImGui::PopStyleColor(3);

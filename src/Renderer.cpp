@@ -8,6 +8,7 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <glm/ext/matrix_transform.hpp>
+#include <iostream>
 #include <vector>
 
 void Renderer::processDrawCall(Render_type type_of_render) {
@@ -25,6 +26,7 @@ void Renderer::processDrawCall(Render_type type_of_render) {
     elementDetectionPass();
     break;
   }
+  
 }
 
 void Renderer::elementDetectionPass() {
@@ -38,7 +40,7 @@ void Renderer::elementDetectionPass() {
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   unsigned int mesh_id = 0;
 
-  switch (render_mode) {
+  switch (current_rendering_mode) {
   case FACE_EDITING:
     shaders[face_detection]->use();
     for (const auto &mesh_ptr : current_scene->getMeshes()) {
@@ -53,7 +55,7 @@ void Renderer::elementDetectionPass() {
     }
     break;
 
-  case VERTEX_EDITING:
+  case VERTEX_EDITING:{
     shaders[vertex_detection]->use();
     unsigned int vertex_offset = 0;
     for (const auto &mesh_ptr : current_scene->getMeshes()) {
@@ -72,23 +74,26 @@ void Renderer::elementDetectionPass() {
                      GL_UNSIGNED_INT, 0);
       glBindVertexArray(0);
     }
+  }
     break;
-    /*
     case EDGE_EDITING:
-    edge_detection->use();
+    auto &shader =shaders[edge_detection];
+    shader->use();
+    unsigned int edge_faces_normal_offset=0;
     for (const auto &mesh_ptr : current_scene->getMeshes()) {
       Mesh *mesh = mesh_ptr.get();
       RenderInfo ri = current_scene->getRenderInfo(mesh);
-      edge_detection->setMat4("model", ri.model);
-      edge_detection->setUint("MeshID", mesh_id++);
+      shader->setMat4("model", ri.model);
+      shader->setMat3("normal_matrix", current_scene->getNormalMatrixFromModel(ri.model));
+      shader->setUint("edge_faces_normal_offset", edge_faces_normal_offset);
+      shader->setUint("MeshID", mesh_id++);
+      edge_faces_normal_offset+=mesh->getEdges().size();
       glBindVertexArray(ri.edge_VAO);
       glDrawElements(GL_LINES, mesh->getEdgeRenderIndices().size(),
                      GL_UNSIGNED_INT, 0);
       glBindVertexArray(0);
-    }
+      }
     break;
-    }
-    */
   }
 }
 
@@ -110,44 +115,50 @@ void Renderer::mainRenderPass() {
   int face_offset = 0;
   int vertex_offset = current_scene->getFaceSelectionArray()->size();
   int edges_offset =
-      vertex_offset + current_scene->getVertexSelectionArray()->size();
+      current_scene->getFaceSelectionArray()->size()
+       + current_scene->getVertexSelectionArray()->size();
 
+  unsigned int edge_faces_normal_offset=0;
   for (const auto &mesh_ptr : current_scene->getMeshes()) {
     Mesh *mesh = mesh_ptr.get();
     RenderInfo ri = current_scene->getRenderInfo(mesh);
     // renders the default mesh color, grey with green outline on the edges
     // Render default pass (base color + outline) AFTER face pass so outline is
     // on top
-    shaders[default_color_pass]->use();
-    shaders[default_color_pass]->setMat4("model", ri.model);
-    shaders[default_color_pass]->setInt("num_faces_offset", face_offset);
+    Shader *shader=shaders[face_color_pass].get();
+    shader->use();
+    shader->setMat4("model", ri.model);
+    shader->setUint("current_rendering_mode", current_rendering_mode);
+    shader->setUint("faces_offset", face_offset);
     face_offset += mesh->getFaces().size();
 
     glBindVertexArray(ri.VAO);
     glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(),
                    GL_UNSIGNED_INT, 0);
-
-    if (render_mode == VERTEX_EDITING) {
-      shaders[vertex_color_pass]->use();
-      shaders[vertex_color_pass]->setMat4("model", ri.model);
-      shaders[vertex_color_pass]->setInt("num_vertices_offset", vertex_offset);
+          
+    shader=shaders[edge_color_pass].get();
+    shader->setMat4("model", ri.model);
+    shader->setMat3("normal_matrix", current_scene->getNormalMatrixFromModel(ri.model));
+    shader->setUint("edge_faces_normal_offset", edge_faces_normal_offset);
+    shader->setUint("edges_offset", edges_offset);
+    edges_offset+=mesh->getEdges().size();
+    edge_faces_normal_offset+=mesh->getEdges().size();
+    glBindVertexArray(ri.edge_VAO);
+    glDrawElements(GL_LINES, mesh->getEdgeRenderIndices().size(),
+                GL_UNSIGNED_INT, 0);
+    
+    if (current_rendering_mode == VERTEX_EDITING) {
+      shader=shaders[vertex_color_pass].get();
+      shader->use();
+      shader->setMat4("model", ri.model);
+      shader->setInt("num_vertices_offset", vertex_offset);
       vertex_offset += mesh->getVertices().size();
+      glBindVertexArray(ri.VAO);
       glDrawArrays(GL_POINTS, 0, mesh->getVertices().size());
     }
-    /*
-    if (render_mode == EDGE_EDITING)
-    {
-            glDisable(GL_CULL_FACE);
-            main_pass_edge_shader->use();
-            main_pass_edge_shader->setMat4("model", ri.model);
-            main_pass_edge_shader->setInt("num_vertices_offset",
-vertex_offset); edges_offset += mesh->getEdges().size();
-            glDrawElements(GL_LINES,
-mesh->getEdgeRenderIndices().size(), GL_UNSIGNED_INT, 0);
-    }
-                            */
-    glBindVertexArray(0);
-  }
+     
+    
+  } 
 }
 
 void Renderer::FramebufferSetup() {
@@ -201,8 +212,8 @@ void Renderer::setViewProjectionMatrices() {
 void Renderer::shaderSetup() {
   // the paths for the color pass
   std::string root = ROOT_DIR;
-  std::string default_color_pass_dir =
-      root + "shaders/mesh_editing/color_pass/default/";
+  std::string face_color_pass_dir =
+      root + "shaders/mesh_editing/color_pass/faces/";
 
   std::string vertex_color_pass_dir =
       root + "shaders/mesh_editing/color_pass/vertices/";
@@ -216,38 +227,35 @@ void Renderer::shaderSetup() {
   std::string edge_detection_dir =
       root + "shaders/mesh_editing/element_detection/edges/";
   shaders.resize(Shader_names::shader_count); // resize to create elements
-  // shaders
 
-  shaders[Shader_names::default_color_pass] = std::make_unique<Shader>(
-      default_color_pass_dir + "defaultColorPass.vert",
-      default_color_pass_dir + "defaultColorPass.geom",
-      default_color_pass_dir + "defaultColorPass.frag");
+  shaders[Shader_names::face_color_pass] = std::make_unique<Shader>(
+      face_color_pass_dir + "faceColorPass.vert",
+      face_color_pass_dir + "faceColorPass.frag");
 
   shaders[Shader_names::vertex_color_pass] =
       std::make_unique<Shader>(vertex_color_pass_dir + "vertexColorPass.vert",
                                vertex_color_pass_dir + "vertexColorPass.frag");
-  /*
+  
   shaders[Shader_names::edge_color_pass] =
   std::make_unique<Shader>(edge_color_pass_dir + "edgeColorPass.vert",
                            edge_color_pass_dir + "edgeColorPass.geom",
                            edge_color_pass_dir + "edgeColorPass.frag");
-                           */
+                           
 
   shaders[Shader_names::face_detection] =
       std::make_unique<Shader>(face_detection_dir + "faceDetection.vert",
                                face_detection_dir + "faceDetection.frag");
 
-  //@TODO i need to add the geom to the vertex_detection shader
   shaders[Shader_names::vertex_detection] =
       std::make_unique<Shader>(vertex_detection_dir + "vertexDetection.vert",
                                vertex_detection_dir + "vertexDetection.geom",
                                vertex_detection_dir + "vertexDetection.frag");
-  /*
+  
 shaders[Shader_names::edge_detection] =
-std::make_unique<Shader>(edge_detection_dir + "edgDetection.vert",
-  edge_detection_dir + "edgeDetection.geom",
-  edge_detection_dir + "edgeDetection.frag");
-*/
+      std::make_unique<Shader>(edge_detection_dir + "edgeDetection.vert",
+                                edge_detection_dir + "edgeDetection.geom",
+                                edge_detection_dir + "edgeDetection.frag");
+
   setViewProjectionMatrices();
 }
 
