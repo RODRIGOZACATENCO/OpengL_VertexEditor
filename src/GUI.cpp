@@ -1,11 +1,10 @@
 //
 // Created by rodrigo on 29/04/2026.
 //
-
+#include "glad/glad.h"
 #include "../include/GUI.h"
 
-#include <iostream>
-#include "glad/glad.h"
+
 #include <imgui.h>
 #include "imgui_impl_opengl3.h"
 // Face button
@@ -14,6 +13,33 @@ void GUI::showMainWindowGUI()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	ImGui::Begin("Editing Tools");
+
+	// --- Camera Type ---
+	bool isGimball = (currentCameraMode == GIMBALL);
+	bool isFree    = (currentCameraMode == FREE);
+
+	ImGui::Text("Camera:");
+	ImGui::SameLine();
+
+	// Gimball button
+	ImGui::PushStyleColor(ImGuiCol_Button,        isGimball ? ImVec4(0.2f, 0.7f, 0.2f, 1.0f) : ImGui::GetStyleColorVec4(ImGuiCol_Button));
+	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, isGimball ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : ImGui::GetStyleColorVec4(ImGuiCol_ButtonHovered));
+	ImGui::PushStyleColor(ImGuiCol_ButtonActive,  isGimball ? ImVec4(0.1f, 0.5f, 0.1f, 1.0f) : ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+	if (ImGui::Button("Gimball##cam") && !isGimball)
+		setCameraMode(GIMBALL);
+	ImGui::PopStyleColor(3);
+
+	ImGui::SameLine();
+
+	// Free button
+	ImGui::PushStyleColor(ImGuiCol_Button,        isFree ? ImVec4(0.2f, 0.7f, 0.2f, 1.0f) : ImGui::GetStyleColorVec4(ImGuiCol_Button));
+	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, isFree ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : ImGui::GetStyleColorVec4(ImGuiCol_ButtonHovered));
+	ImGui::PushStyleColor(ImGuiCol_ButtonActive,  isFree ? ImVec4(0.1f, 0.5f, 0.1f, 1.0f) : ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+	if (ImGui::Button("Free##cam") && !isFree)
+		setCameraMode(FREE);
+	ImGui::PopStyleColor(3);
+
+	ImGui::Separator();
 
 	bool faceActive = main_state.isFaceSelectionActive;
 	bool vertexActive = main_state.isVertexSelectionActive;

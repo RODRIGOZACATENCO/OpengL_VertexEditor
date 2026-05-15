@@ -13,7 +13,7 @@ void main() {
 bool isEdgeSelected = elements_selected[edges_offset + int(edgeID)] == 1;
 vec4 wireColor =vec4(0.0, 1.0, 0.0, 1.0);
 if(isEdgeSelected){
-     wireColor =vec4(0.8, 0.2, 0.2, 1.0);
+     wireColor =vec4(0.576, 0.267, 0.788,1.0);
     
 }
 FragColor = wireColor;

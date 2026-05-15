@@ -7,7 +7,6 @@
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
-#include <glm/ext/matrix_transform.hpp>
 #include <iostream>
 #include <vector>
 
@@ -152,7 +151,7 @@ void Renderer::mainRenderPass() {
     glDrawElements(GL_LINES, mesh->getEdgeRenderIndices().size(),
                 GL_UNSIGNED_INT, 0);
     glEnable(GL_CULL_FACE);
-    glDisable(GL_POLYGON_OFFSET_FILL);
+
 
     if (current_rendering_mode == VERTEX_EDITING) {
       shader=shaders[vertex_color_pass].get();
@@ -162,7 +161,9 @@ void Renderer::mainRenderPass() {
       vertex_offset += mesh->getVertices().size();
       glBindVertexArray(ri.VAO);
       glDrawArrays(GL_POINTS, 0, mesh->getVertices().size());
+
     }
+    glDisable(GL_POLYGON_OFFSET_FILL);
      
     
   } 
@@ -267,6 +268,7 @@ shaders[Shader_names::edge_detection] =
 }
 
 void Renderer::updateModelMatrices() {
+  float rotation_speed=5;
   for (int i = 0; i < current_scene->getMeshes().size(); i++) {
     auto *mesh = current_scene->getMeshes()[i].get();
     auto name = current_scene->getMeshName(mesh);

@@ -4,17 +4,21 @@
 
 #pragma once
 
+#include "CameraHandler.h"
+
 enum GUIState { FACE_EDITING = 1, VERTEX_EDITING = 2, EDGE_EDITING = 3 };
 
 struct MainGUI_state {
   bool isFaceSelectionActive = false;
   bool isVertexSelectionActive = false;
   bool isEdgeSelectionActive = false;
+  CameraType cameraMode = GIMBALL;
 };
 
 class GUI {
 private:
   GUIState currentState = FACE_EDITING;
+  CameraType currentCameraMode = GIMBALL;
   unsigned int reset_selection_buffer_flag =
       0; // flag to reset the selection buffer on the GPU when the clear button
          // is pressed
@@ -35,4 +39,10 @@ public:
   GUIState getCurrentState() const { return currentState; }
   unsigned int getResetFlag() const { return reset_selection_buffer_flag; }
   void setResetFlag(unsigned int flag) { reset_selection_buffer_flag = flag; }
+
+  void setCameraMode(CameraType mode) {
+    currentCameraMode = mode;
+    main_state.cameraMode = mode;
+  }
+  CameraType getCurrentCameraMode() const { return currentCameraMode; }
 };

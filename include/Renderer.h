@@ -3,11 +3,12 @@
 //
 
 #pragma once
+#include <glad/glad.h>
 #include "GUI.h"
 #include "Scene.h"
 #include "ShaderHandler.h"
 #include <GLFW/glfw3.h>
-#include <glad/glad.h>
+
 #include <memory>
 #include <optional>
 #include <tuple>
@@ -39,9 +40,8 @@ private:
   GLFWwindow *window;
   int width, height;
   std::vector<std::unique_ptr<Shader>> shaders; // holds all the shaders
-
+  float delta_time;
   FramebufferInfo element_detection_framebuffer_info;
-
 public:
   Renderer(GLFWwindow *window, Scene *start_scene)
       : window(window), current_scene(start_scene), width(0), height(0) {
@@ -67,7 +67,9 @@ public:
   GLFWwindow *getWindow() const { return window; }
   int getWidth() const { return width; }
   int getHeight() const { return height; }
-
+  void setDeltaTime(float delta_time){
+    this->delta_time=delta_time;
+  }
   // Methods
 
   // setups common data for all types of render

@@ -31,7 +31,10 @@ void MainWindow::use(std::string *scene_name) {
     scene_name = &default_scene_name;
   // the renderer will accept the scene and draw it in the screen
   renderer->setCurrentScene(scene_name_to_scene_object[*scene_name].get());
-
+  float time=glfwGetTime();
+  delta_time=time-last_frame;
+  last_frame=time;
+  renderer->setDeltaTime(delta_time);
   std::string error;
   if (isWindowReady(&error)) {
     while (!glfwWindowShouldClose(window)) {
@@ -108,42 +111,26 @@ void MainWindow::onMouseButton(int button, int action, int mods) {
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
     renderer->processDrawCall(element_detection_pass);
     auto result = renderer->meshElementDetection();
-    renderer->setRenderMode(gui.getCurrentState());
-
+    if(!(mods & GLFW_MOD_SHIFT)){ //shift+left click, reset if the user is not using shift
+      renderer->getCurrentScene()->resetSelectionBuffer(gui.getCurrentState());
+    }
     if (result) {
       auto [clicked_ID, mesh_id, empty] = *result;
       switch (gui.getCurrentState()) {
       case FACE_EDITING:
-        std::cout << "Clicked on face ID: " << clicked_ID
-                  << " of mesh ID: " << mesh_id << std::endl;
-        for (auto i : *renderer->getCurrentScene()->getFaceSelectionArray())
-          std::cout << i << " ";
-        std::cout << std::endl;
         renderer->getCurrentScene()->updateFacesSelected(clicked_ID, mesh_id);
         break;
 
       case VERTEX_EDITING:
-        std::cout << "Clicked on vertex ID: " << clicked_ID
-                  << " of mesh ID: " << mesh_id << std::endl;
-        for (auto i : *renderer->getCurrentScene()->getVertexSelectionArray())
-          std::cout << i << " ";
         renderer->getCurrentScene()->updateVerticesSelected(clicked_ID,
                                                             mesh_id);
-        std::cout << std::endl;
         break;
       case EDGE_EDITING:
-        std::cout << "Clicked on edge ID: " << clicked_ID
-                  << " of mesh ID: " << mesh_id << std::endl;
-
-        for (auto i : *renderer->getCurrentScene()->getEdgeSelectionArray())
-          std::cout << i << " ";
-        std::cout << std::endl;
         renderer->getCurrentScene()->updateEdgesSelected(clicked_ID, mesh_id);
-
         break;
       }
-    } else {
-      std::cout << "Clicked on empty space" << std::endl;
+     
+
     }
   }
 }

@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <cstdlib>
 #include <glm/ext/matrix_float4x4.hpp>
 #include <glm/glm.hpp>
 #include <map>
@@ -26,6 +27,12 @@ struct EdgeNormals{
   glm::vec4 face_normal_1;
   glm::vec4 face_normal_2;
 };
+
+struct RotationPosition{
+  float x=0.0;
+  float y=0.0;
+  float z=0.0;
+};
 struct RenderInfo {
   unsigned int VAO;
   unsigned int VBO;
@@ -33,6 +40,7 @@ struct RenderInfo {
   unsigned int edge_VAO;
   unsigned int edge_EBO;
   std::vector<glm::vec3> VBO_faces_vertices_data; //(vertex,normal)
+  RotationPosition current_rotation;//x,y,z rotation positions
   glm::mat4 model;
 };
 class Scene {
@@ -103,6 +111,9 @@ public:
     view_projection_matrix = projection * view;
   }
 
+  void updateMeshRotation(RotationPosition delta_update, Mesh *mesh_to_update){
+
+  }
   const glm::mat4 &getViewProjectionMatrix() const {
     return view_projection_matrix;
   }

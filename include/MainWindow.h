@@ -72,8 +72,11 @@ private:
   std::unique_ptr<Renderer> renderer;
   std::map<std::string, std::unique_ptr<Scene>> scene_name_to_scene_object;
   bool has_scene_changed = false;
+  float delta_time = 0.0f;
+	float last_frame = 0.0f;
 
 public:
+
   MainWindow(GLFWwindow *window) : window(window), width(0), height(0) {
     glfwGetFramebufferSize(window, &width, &height);
     auto pyramid = std::make_unique<Mesh>(&piramid_vertices, &piramid_faces);
@@ -116,7 +119,10 @@ public:
     width = w;
     height = h;
   }
-
+  float getDeltaTime(){return delta_time;}
+  void setDeltaTime(float delta_time){this->delta_time=delta_time;}
+  float getLAstFrame(){return last_frame;}
+  void setLastFrame(float last_frame){this->last_frame=last_frame;}
   // Methods
   bool isWindowReady(std::string *out_error = nullptr) const;
   static void mainWindowMouseCallback(GLFWwindow *window, int button,
