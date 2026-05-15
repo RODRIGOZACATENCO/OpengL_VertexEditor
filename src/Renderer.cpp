@@ -135,18 +135,25 @@ void Renderer::mainRenderPass() {
     glBindVertexArray(ri.VAO);
     glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(),
                    GL_UNSIGNED_INT, 0);
-          
+    
+
     shader=shaders[edge_color_pass].get();
+    shader->use();
     shader->setMat4("model", ri.model);
     shader->setMat3("normal_matrix", current_scene->getNormalMatrixFromModel(ri.model));
     shader->setUint("edge_faces_normal_offset", edge_faces_normal_offset);
     shader->setUint("edges_offset", edges_offset);
     edges_offset+=mesh->getEdges().size();
     edge_faces_normal_offset+=mesh->getEdges().size();
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-1.0f, -1.0f);
+    glDisable(GL_CULL_FACE);
     glBindVertexArray(ri.edge_VAO);
     glDrawElements(GL_LINES, mesh->getEdgeRenderIndices().size(),
                 GL_UNSIGNED_INT, 0);
-    
+    glEnable(GL_CULL_FACE);
+    glDisable(GL_POLYGON_OFFSET_FILL);
+
     if (current_rendering_mode == VERTEX_EDITING) {
       shader=shaders[vertex_color_pass].get();
       shader->use();

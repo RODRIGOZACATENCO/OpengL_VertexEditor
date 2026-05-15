@@ -233,7 +233,7 @@ void Scene::updateSelectionBuffer(GUIState state) {
 }
 
 glm::mat3 Scene::getNormalMatrixFromModel(glm::mat4 model_matrix) {
-  return glm::transpose(glm::inverse(glm::mat3(view*model_matrix)));
+  return glm::transpose(glm::inverse(glm::mat3(model_matrix)));
 }
 
 void Scene::cleanup() {

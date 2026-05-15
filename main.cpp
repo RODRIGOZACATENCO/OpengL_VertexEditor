@@ -50,10 +50,6 @@ int main()
 	ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
 
-	//@TODO element detection does not account for faces that we cant see on the viewport
-	//@TODO change the way the detection pass renders its color to account for this
-	//@TODO move all mesh information into a Scene class - WORKING
-	//@TODO move all rendering calls into a Renderer class, organize better the shaders names
 	//@TODO create simple functions that save and load processed meshes as a binary file
 
 	main_window.use();

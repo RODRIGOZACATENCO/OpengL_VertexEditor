@@ -219,6 +219,6 @@ glm::vec3 Mesh::randomRGB() {
 std::pair< int, int> Mesh::getFaceIndicesAssociatedWithEdge(unsigned int edge_index) {
    int face_1=half_edges[edges[edge_index].halfedge].face;
    int face_2=(half_edges[edges[edge_index].halfedge].twin !=-1 ) 
-   ? face_2=half_edges[half_edges[edges[edge_index].halfedge].twin].face : -1;
+   ? half_edges[half_edges[edges[edge_index].halfedge].twin].face : -1;
    return{face_1,face_2};
 }

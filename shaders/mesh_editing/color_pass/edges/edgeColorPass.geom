@@ -28,7 +28,9 @@ void main(){
     EdgeNormals en=face_normals[edge_faces_normal_offset+gl_PrimitiveIDIn];
     vec3 face_normal_1=normal_matrix*vec3(en.face_normal_1);
     vec3 face_normal_2=normal_matrix*vec3(en.face_normal_2);
-    if(face_normal_1.z >0.0 || face_normal_2.z>0.0){//if any face front facing
+    float epsilon=0.01;
+    if((face_normal_1.z > -epsilon|| face_normal_1.z < epsilon)||
+     face_normal_2.z > -epsilon|| face_normal_2.z < epsilon){//if any face front facing
         edgeID=gl_PrimitiveIDIn;
         //coordinates are in clip space(4d), they need to be in 2d space NDC 
         vec4 vertex1 = gl_in[0].gl_Position;
