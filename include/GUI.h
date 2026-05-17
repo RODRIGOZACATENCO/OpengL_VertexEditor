@@ -12,13 +12,13 @@ struct MainGUI_state {
   bool isFaceSelectionActive = false;
   bool isVertexSelectionActive = false;
   bool isEdgeSelectionActive = false;
-  CameraType cameraMode = GIMBALL;
+  CameraMode cameraMode = GIMBALL;
 };
 
 class GUI {
 private:
   GUIState currentState = FACE_EDITING;
-  CameraType currentCameraMode = GIMBALL;
+  CameraMode currentCameraMode = GIMBALL;
   unsigned int reset_selection_buffer_flag =
       0; // flag to reset the selection buffer on the GPU when the clear button
          // is pressed
@@ -40,9 +40,9 @@ public:
   unsigned int getResetFlag() const { return reset_selection_buffer_flag; }
   void setResetFlag(unsigned int flag) { reset_selection_buffer_flag = flag; }
 
-  void setCameraMode(CameraType mode) {
+  void setCameraMode(CameraMode mode) {
     currentCameraMode = mode;
     main_state.cameraMode = mode;
   }
-  CameraType getCurrentCameraMode() const { return currentCameraMode; }
+  CameraMode getCurrentCameraMode() const { return currentCameraMode; }
 };

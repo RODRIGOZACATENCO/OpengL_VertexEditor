@@ -2,9 +2,11 @@
 // Created by rodrigo on 30/04/2026.
 //
 
+#include <cstring>
 #include <glad/glad.h>
 
 #include "../include/MainWindow.h"
+#include "CameraHandler.h"
 #include "Renderer.h"
 
 #include <GLFW/glfw3.h>
@@ -13,6 +15,8 @@
 #include <imgui_impl_opengl3.h>
 
 #include <glm/glm.hpp>
+#include <iostream>
+#include <ostream>
 #include <random>
 glm::vec3 generateRandomColor() {
   std::random_device rd;
@@ -31,13 +35,16 @@ void MainWindow::use(std::string *scene_name) {
     scene_name = &default_scene_name;
   // the renderer will accept the scene and draw it in the screen
   renderer->setCurrentScene(scene_name_to_scene_object[*scene_name].get());
-  float time=glfwGetTime();
-  delta_time=time-last_frame;
-  last_frame=time;
-  renderer->setDeltaTime(delta_time);
+
   std::string error;
   if (isWindowReady(&error)) {
     while (!glfwWindowShouldClose(window)) {
+      float time=glfwGetTime();
+      delta_time=time-last_frame;
+      last_frame=time;
+
+      renderer->setDeltaTime(delta_time);
+      camera.setDeltaTime(delta_time);
       renderer->setRenderMode(gui.getCurrentState());
       // 1. POLL EVENTS FIRST
       glfwPollEvents();
@@ -54,8 +61,8 @@ void MainWindow::use(std::string *scene_name) {
       ImGui::NewFrame();
 
       // 3. RENDER SCENE AND UI
+      renderer->getCurrentScene()->setViewMatrix(camera.getCurrentViewMatrix());
       renderer->processDrawCall(main_render_pass);
-      renderer->processDrawCall(element_detection_pass);
       gui.showMainWindowGUI();
 
       glfwSwapBuffers(window);
@@ -135,11 +142,61 @@ void MainWindow::onMouseButton(int button, int action, int mods) {
   }
 }
 
+void MainWindow::mainWindowKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+  // 3. Retrieve the pointer we stored earlier
+  MainWindow *instance =
+      static_cast<MainWindow *>(glfwGetWindowUserPointer(window));
+
+  // 4. Forward the call to the non-static member
+  if (instance) {
+    instance->onKeyboardInput(window, key, scancode, action, mods);
+  }
+}
+
+void MainWindow::onKeyboardInput(GLFWwindow *window, int key, int scancode, int action, int mods){
+
+
+}
 void MainWindow::processInput() {
+  if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+    camera.setKey(UP, true);
+  if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_RELEASE)
+    camera.setKey(UP, false);
+
+  if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+    camera.setKey(DOWN, true);
+  if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_RELEASE)
+    camera.setKey(DOWN, false);
+
+  if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+    camera.setKey(LEFT, true);
+  if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_RELEASE)
+    camera.setKey(LEFT, false);
+
+  if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+    camera.setKey(RIGHT, true);
+  if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_RELEASE)
+    camera.setKey(RIGHT, false);
+
+  camera.gimballCameraUpdate();
 
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, GLFW_TRUE);
   }
+}
+
+
+void MainWindow::mainWindowScrollCallback(GLFWwindow *window, double xoffset, double yoffset){
+
+  MainWindow *instance =
+      static_cast<MainWindow *>(glfwGetWindowUserPointer(window));
+
+  if (instance) {
+    instance->onScrollCallback(window,xoffset,yoffset);
+  }
+}
+void MainWindow::onScrollCallback(GLFWwindow *window, double xoffset, double yoffset){
+  camera.processZoom(yoffset);
 }
 
 bool MainWindow::isWindowReady(std::string *out_error) const {

@@ -4,9 +4,12 @@
 
 #include "../include/Renderer.h"
 #include "GUI.h"
+#include "Scene.h"
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
+#include <glm/ext/quaternion_geometric.hpp>
+#include <glm/ext/vector_float3.hpp>
 #include <iostream>
 #include <vector>
 
@@ -268,26 +271,41 @@ shaders[Shader_names::edge_detection] =
 }
 
 void Renderer::updateModelMatrices() {
-  float rotation_speed=5;
+  constexpr float pi = std::numbers::pi_v<float>;
   for (int i = 0; i < current_scene->getMeshes().size(); i++) {
     auto *mesh = current_scene->getMeshes()[i].get();
     auto name = current_scene->getMeshName(mesh);
-
+    glm::quat& object_orientation = current_scene->getRenderInfo(mesh).object_orientation;
+    glm::vec3 rotation_axis= {1.0f, 0.2f, 0.5f};
+    float rotation_speed= pi/10;
     // model for piramid
     if (name == "pyramid") {
       glm::mat4 model = glm::mat4(1.0f);
+
       model = glm::translate(model, glm::vec3(0.0f, -1.0f, -5.0f));
-      model =
-          glm::rotate(model, (float)glfwGetTime(), glm::vec3(1.0f, 0.2f, 0.5f));
+
+      float delta_angle = rotation_speed * delta_time;
+      glm::quat delta_rotation = glm::angleAxis(delta_angle, rotation_axis);
+      object_orientation=delta_rotation*object_orientation;
+      object_orientation=glm::normalize(object_orientation);
+
+      model= model*glm::mat4_cast(object_orientation);
       current_scene->setModelMatrix(mesh, model);
     }
     // model for piramid
     if (name == "cube") {
+      rotation_axis= glm::vec3(1.0f, 0.2f, 0.5f);
+      rotation_speed= -pi/10;
       glm::mat4 model = glm::mat4(1.0f);
-      model = glm::translate(model, glm::vec3(1.0f, -1.0f, -2.0f));
+      model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
       model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
-      model =
-          glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 0.2f, 0.5f));
+ 
+      float delta_angle = rotation_speed * delta_time;
+      glm::quat delta_rotation = glm::angleAxis(delta_angle, rotation_axis);
+      object_orientation=delta_rotation*object_orientation;
+      object_orientation=glm::normalize(object_orientation);
+      
+      model =model*glm::mat4_cast(object_orientation);
       current_scene->setModelMatrix(mesh, model);
     }
   }

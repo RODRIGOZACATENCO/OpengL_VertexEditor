@@ -3,11 +3,12 @@
 //
 
 #pragma once
-#include <cstdlib>
-#include <glm/ext/matrix_float4x4.hpp>
+ #include <glm/gtc/quaternion.hpp>
+#include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <map>
 #include <memory>
+
 #include <string>
 #include <vector>
 
@@ -28,11 +29,7 @@ struct EdgeNormals{
   glm::vec4 face_normal_2;
 };
 
-struct RotationPosition{
-  float x=0.0;
-  float y=0.0;
-  float z=0.0;
-};
+
 struct RenderInfo {
   unsigned int VAO;
   unsigned int VBO;
@@ -40,7 +37,7 @@ struct RenderInfo {
   unsigned int edge_VAO;
   unsigned int edge_EBO;
   std::vector<glm::vec3> VBO_faces_vertices_data; //(vertex,normal)
-  RotationPosition current_rotation;//x,y,z rotation positions
+  glm::quat object_orientation={1.0f, 0.0f, 0.0f, 0.0f};
   glm::mat4 model;
 };
 class Scene {
@@ -111,9 +108,7 @@ public:
     view_projection_matrix = projection * view;
   }
 
-  void updateMeshRotation(RotationPosition delta_update, Mesh *mesh_to_update){
-
-  }
+  
   const glm::mat4 &getViewProjectionMatrix() const {
     return view_projection_matrix;
   }
@@ -122,7 +117,7 @@ public:
 
   const std::vector<std::unique_ptr<Mesh>> &getMeshes() const { return meshes; }
 
-  RenderInfo getRenderInfo(Mesh *mesh) { return mesh_to_render_info[mesh]; }
+  RenderInfo &getRenderInfo(Mesh *mesh) { return mesh_to_render_info[mesh]; }
 
   std::vector<int> *getFaceSelectionArray() { return &face_selection_array; }
   std::vector<int> *getVertexSelectionArray() {
