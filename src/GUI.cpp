@@ -12,7 +12,40 @@
 void GUI::showMainWindowGUI()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	ImGui::Begin("Editing Tools");
+	const ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+	if (!isPanelVisible) {
+		// Show only a small button in the top-left corner to re-open the panel
+		ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x, viewport->WorkPos.y), ImGuiCond_Always);
+		ImGui::SetNextWindowSize(ImVec2(0, 0)); // auto-fit to content
+		ImGui::Begin("##menu_toggle", nullptr,
+			ImGuiWindowFlags_NoMove |
+			ImGuiWindowFlags_NoResize |
+			ImGuiWindowFlags_NoCollapse |
+			ImGuiWindowFlags_NoTitleBar |
+			ImGuiWindowFlags_AlwaysAutoResize);
+		if (ImGui::Button("Menu")) {
+			isPanelVisible = true;
+		}
+		ImGui::End();
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		return;
+	}
+
+	// Pin the panel to the left side of the screen like a fixed menu
+	ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x, viewport->WorkPos.y), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(250, viewport->WorkSize.y), ImGuiCond_Always);
+	ImGui::Begin("Editing Tools", nullptr,
+		ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoResize |
+		ImGuiWindowFlags_NoCollapse);
+
+	// Hide button at the top of the panel
+	if (ImGui::Button("Hide")) {
+		isPanelVisible = false;
+	}
+	ImGui::Separator();
 
 	// --- Camera Type ---
 	bool isGimball = (currentCameraMode == GIMBALL);

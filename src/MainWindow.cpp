@@ -2,7 +2,6 @@
 // Created by rodrigo on 30/04/2026.
 //
 
-#include <cstring>
 #include <glad/glad.h>
 
 #include "../include/MainWindow.h"
@@ -158,27 +157,11 @@ void MainWindow::onKeyboardInput(GLFWwindow *window, int key, int scancode, int 
 
 }
 void MainWindow::processInput() {
-  if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-    camera.setKey(UP, true);
-  if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_RELEASE)
-    camera.setKey(UP, false);
-
-  if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-    camera.setKey(DOWN, true);
-  if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_RELEASE)
-    camera.setKey(DOWN, false);
-
-  if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-    camera.setKey(LEFT, true);
-  if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_RELEASE)
-    camera.setKey(LEFT, false);
-
-  if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-    camera.setKey(RIGHT, true);
-  if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_RELEASE)
-    camera.setKey(RIGHT, false);
-
-  camera.gimballCameraUpdate();
+  keys[UP]    = (glfwGetKey(window, GLFW_KEY_UP)    == GLFW_PRESS);
+  keys[DOWN]  = (glfwGetKey(window, GLFW_KEY_DOWN)  == GLFW_PRESS);
+  keys[LEFT]  = (glfwGetKey(window, GLFW_KEY_LEFT)  == GLFW_PRESS);
+  keys[RIGHT] = (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS);
+  camera.gimballCameraUpdate(keys);
 
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -196,7 +179,7 @@ void MainWindow::mainWindowScrollCallback(GLFWwindow *window, double xoffset, do
   }
 }
 void MainWindow::onScrollCallback(GLFWwindow *window, double xoffset, double yoffset){
-  camera.processZoom(yoffset);
+  camera.processZoom(-yoffset);
 }
 
 bool MainWindow::isWindowReady(std::string *out_error) const {

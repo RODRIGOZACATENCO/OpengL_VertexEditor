@@ -24,6 +24,7 @@ private:
          // is pressed
 
   bool has_state_changed=false;
+  bool isPanelVisible=true;
 public:
   MainGUI_state main_state;
   void showMainWindowGUI();

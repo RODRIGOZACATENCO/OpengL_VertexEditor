@@ -20,7 +20,6 @@ enum CameraMovement{
 };
 class CameraHandler {
   private:
-  bool keys[1024]={false};
   float pi = std::numbers::pi_v<float>;
 	CameraMode current_camera_mode;
   float delta_time;
@@ -43,9 +42,10 @@ class CameraHandler {
   glm::mat4 current_view_matrix=glm::lookAt(camera_pos, target, camera_normal);
  public:
   CameraHandler(){
-    gimballCameraUpdate();
+    const bool no_keys[1024] = {};
+    gimballCameraUpdate(no_keys);
   }
-  void gimballCameraUpdate();
+  void gimballCameraUpdate(const bool* keys);
   void processZoom(double yoffset);
 
   
@@ -57,10 +57,6 @@ class CameraHandler {
   }
   void setCurrentCameraMode(CameraMode camera_mode){
     this->current_camera_mode=camera_mode;
-  }
-  void setKey(int key, bool pressed){
-    if(key >= 0 && key < 1024)
-      keys[key] = pressed;
   }
 };
 
