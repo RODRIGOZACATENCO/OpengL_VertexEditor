@@ -2,10 +2,12 @@
 //
 
 #pragma once
-#include <glad/glad.h>
-#include "CameraHandler.h"
+
 #define GLFW_INCLUDE_NONE
+
+#include "CameraHandler.h"
 #include <GLFW/glfw3.h>
+#include <glad/glad.h>
 #include <map>
 #include <memory>
 #include <optional>
@@ -14,9 +16,9 @@
 #include <utility>
 #include <vector>
 
+#include "ElementEditingRenderer.h"
 #include "GUI.h"
 #include "Mesh.h"
-#include "Renderer.h"
 #include "Scene.h"
 
 inline std::vector<float> cube_vertices = {
@@ -70,24 +72,25 @@ private:
   int width, height; // window dimensions
   GLFWwindow *window;
   GUI gui;
-  std::unique_ptr<Renderer> renderer;
+  std::unique_ptr<ElementEditingRenderer> renderer;
   std::map<std::string, std::unique_ptr<Scene>> scene_name_to_scene_object;
   bool has_scene_changed = false;
   float delta_time = 0.0f;
-	float last_frame = 0.0f;
-  bool keys[1024] = { false };
-public:
+  float last_frame = 0.0f;
+  bool keys[1024] = {false};
 
+public:
   MainWindow(GLFWwindow *window) : window(window), width(0), height(0) {
     glfwGetFramebufferSize(window, &width, &height);
     auto pyramid = std::make_unique<Mesh>(&piramid_vertices, &piramid_faces);
     auto cube = std::make_unique<Mesh>(&cube_vertices, &faces);
-  
+
     glm::mat4 projection = glm::perspective(
         glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 
-    auto default_scene = std::make_unique<Scene>(
-        camera.getCurrentViewMatrix(), projection); // initialize the default scene
+    auto default_scene =
+        std::make_unique<Scene>(camera.getCurrentViewMatrix(),
+                                projection); // initialize the default scene
 
     default_scene->addMesh(std::move(pyramid), "pyramid", glm::mat4(1.0f));
     default_scene->addMesh(std::move(cube), "cube", glm::mat4(1.0f));
@@ -95,7 +98,7 @@ public:
         true; // sets the initial state of the face selection button to active
     gui.setState(FACE_EDITING);
 
-    renderer = std::make_unique<Renderer>(window, default_scene.get());
+    renderer = std::make_unique<ElementEditingRenderer>(window, default_scene.get());
     scene_name_to_scene_object["default"] = std::move(default_scene);
 
     renderer->setCurrentScene(scene_name_to_scene_object["default"].get());
@@ -112,30 +115,33 @@ public:
   // Getters and Setters
   GLFWwindow *getWindow() const { return window; }
   GUI &getGui() { return gui; }
-  Renderer *getRenderer() { return renderer.get(); }
+  ElementEditingRenderer *getRenderer() { return renderer.get(); }
   int getWidth() const { return width; }
   int getHeight() const { return height; }
   void setWindowSize(int w, int h) {
     width = w;
     height = h;
   }
-  float getDeltaTime(){return delta_time;}
-  void setDeltaTime(float delta_time){this->delta_time=delta_time;}
-  float getLAstFrame(){return last_frame;}
-  void setLastFrame(float last_frame){this->last_frame=last_frame;}
+  float getDeltaTime() { return delta_time; }
+  void setDeltaTime(float delta_time) { this->delta_time = delta_time; }
+  float getLAstFrame() { return last_frame; }
+  void setLastFrame(float last_frame) { this->last_frame = last_frame; }
   // Methods
   bool isWindowReady(std::string *out_error = nullptr) const;
   static void mainWindowMouseCallback(GLFWwindow *window, int button,
                                       int action, int mods);
   static void framebufferSizeCallback(GLFWwindow *window, int width,
                                       int height);
-  static void mainWindowKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-  static void mainWindowScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+  static void mainWindowKeyCallback(GLFWwindow *window, int key, int scancode,
+                                    int action, int mods);
+  static void mainWindowScrollCallback(GLFWwindow *window, double xoffset,
+                                       double yoffset);
 
   void onFramebufferSize();
   void onMouseButton(int button, int action, int mods);
-  void onKeyboardInput(GLFWwindow* window, int key, int scancode, int action, int mods);
-  void onScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+  void onKeyboardInput(GLFWwindow *window, int key, int scancode, int action,
+                       int mods);
+  void onScrollCallback(GLFWwindow *window, double xoffset, double yoffset);
   void use(std::string *scene_name = nullptr);
   void updateModelMatrices(
       std::vector<std::pair<Mesh *, glm::mat4>> *updated_matrices);

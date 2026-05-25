@@ -4,9 +4,9 @@
 
 #include <glad/glad.h>
 
+#include "../include/ElementEditingRenderer.h"
 #include "../include/MainWindow.h"
 #include "CameraHandler.h"
-#include "Renderer.h"
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>
@@ -38,9 +38,9 @@ void MainWindow::use(std::string *scene_name) {
   std::string error;
   if (isWindowReady(&error)) {
     while (!glfwWindowShouldClose(window)) {
-      float time=glfwGetTime();
-      delta_time=time-last_frame;
-      last_frame=time;
+      float time = glfwGetTime();
+      delta_time = time - last_frame;
+      last_frame = time;
 
       renderer->setDeltaTime(delta_time);
       camera.setDeltaTime(delta_time);
@@ -117,7 +117,8 @@ void MainWindow::onMouseButton(int button, int action, int mods) {
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
     renderer->processDrawCall(element_detection_pass);
     auto result = renderer->meshElementDetection();
-    if(!(mods & GLFW_MOD_SHIFT)){ //shift+left click, reset if the user is not using shift
+    if (!(mods & GLFW_MOD_SHIFT)) { // shift+left click, reset if the user is
+                                    // not using shift
       renderer->getCurrentScene()->resetSelectionBuffer(gui.getCurrentState());
     }
     if (result) {
@@ -135,13 +136,12 @@ void MainWindow::onMouseButton(int button, int action, int mods) {
         renderer->getCurrentScene()->updateEdgesSelected(clicked_ID, mesh_id);
         break;
       }
-     
-
     }
   }
 }
 
-void MainWindow::mainWindowKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+void MainWindow::mainWindowKeyCallback(GLFWwindow *window, int key,
+                                       int scancode, int action, int mods) {
   // 3. Retrieve the pointer we stored earlier
   MainWindow *instance =
       static_cast<MainWindow *>(glfwGetWindowUserPointer(window));
@@ -152,14 +152,12 @@ void MainWindow::mainWindowKeyCallback(GLFWwindow* window, int key, int scancode
   }
 }
 
-void MainWindow::onKeyboardInput(GLFWwindow *window, int key, int scancode, int action, int mods){
-
-
-}
+void MainWindow::onKeyboardInput(GLFWwindow *window, int key, int scancode,
+                                 int action, int mods) {}
 void MainWindow::processInput() {
-  keys[UP]    = (glfwGetKey(window, GLFW_KEY_UP)    == GLFW_PRESS);
-  keys[DOWN]  = (glfwGetKey(window, GLFW_KEY_DOWN)  == GLFW_PRESS);
-  keys[LEFT]  = (glfwGetKey(window, GLFW_KEY_LEFT)  == GLFW_PRESS);
+  keys[UP] = (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS);
+  keys[DOWN] = (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS);
+  keys[LEFT] = (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS);
   keys[RIGHT] = (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS);
   camera.gimballCameraUpdate(keys);
 
@@ -168,17 +166,18 @@ void MainWindow::processInput() {
   }
 }
 
-
-void MainWindow::mainWindowScrollCallback(GLFWwindow *window, double xoffset, double yoffset){
+void MainWindow::mainWindowScrollCallback(GLFWwindow *window, double xoffset,
+                                          double yoffset) {
 
   MainWindow *instance =
       static_cast<MainWindow *>(glfwGetWindowUserPointer(window));
 
   if (instance) {
-    instance->onScrollCallback(window,xoffset,yoffset);
+    instance->onScrollCallback(window, xoffset, yoffset);
   }
 }
-void MainWindow::onScrollCallback(GLFWwindow *window, double xoffset, double yoffset){
+void MainWindow::onScrollCallback(GLFWwindow *window, double xoffset,
+                                  double yoffset) {
   camera.processZoom(-yoffset);
 }
 

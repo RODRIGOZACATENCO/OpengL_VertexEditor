@@ -1,4 +1,4 @@
-#include <glad/glad.h>
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
@@ -17,7 +17,7 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
   GLFWwindow *window =
-      glfwCreateWindow(1600, 1200, "VertexEditor", nullptr, nullptr);
+      glfwCreateWindow(1200, 800, "VertexEditor", nullptr, nullptr);
   if (window == nullptr) {
     std::cout << "Failed to create GLFW window" << std::endl;
     glfwTerminate();
@@ -48,7 +48,7 @@ int main() {
   ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
 
   //@TODO create simple functions that save and load processed meshes as a
-  //binary file
+  // binary file
 
   main_window.use();
   main_window.cleanup();
