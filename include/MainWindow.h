@@ -7,7 +7,6 @@
 
 #include "CameraHandler.h"
 #include <GLFW/glfw3.h>
-#include <glad/glad.h>
 #include <map>
 #include <memory>
 #include <optional>
@@ -103,7 +102,8 @@ public:
 
     renderer->setCurrentScene(scene_name_to_scene_object["default"].get());
     renderer->setScreenSize(width, height);
-    renderer->setRenderMode(FACE_EDITING);
+    renderer->setRenderMode(FACE_EDITING
+    );
 
     glfwSetWindowUserPointer(window, this);
     glfwSetKeyCallback(window, mainWindowKeyCallback);

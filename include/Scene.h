@@ -29,7 +29,6 @@ struct EdgeNormals{
   glm::vec4 face_normal_2;
 };
 
-
 struct RenderInfo {
   unsigned int VAO;
   unsigned int VBO;

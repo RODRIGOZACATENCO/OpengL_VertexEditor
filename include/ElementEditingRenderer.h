@@ -8,8 +8,6 @@
 #include "Scene.h"
 #include "ShaderHandler.h"
 #include <GLFW/glfw3.h>
-#include <glad/glad.h>
-
 #include <memory>
 #include <optional>
 #include <tuple>
@@ -28,6 +26,7 @@ enum Shader_names {
   edge_detection,
   vertex_detection,
   face_detection,
+  axis_lines_shader,
   shader_count
 };
 
@@ -44,11 +43,19 @@ private:
   float delta_time;
   FramebufferInfo element_detection_framebuffer_info;
 
+  glm::vec3 grid_origin={-5,-5,-5};
+  std::vector<glm::vec3> axis_lines;
+  std::vector<glm::vec3> y_axis_lines;
+  std::vector<glm::vec3> z_axis_lines;
+  unsigned int axis_lines_VBO,axis_lines_VAO;
 public:
   ElementEditingRenderer(GLFWwindow *window, Scene *start_scene)
       : window(window), current_scene(start_scene), width(0), height(0) {
     FramebufferSetup();
     shaderSetup();
+    setupAxisLines();
+
+
   }
 
   // Getters and Setters
@@ -72,6 +79,11 @@ public:
   void setDeltaTime(float delta_time) { this->delta_time = delta_time; }
   // Methods
 
+  //renders background
+  void setupAxisLines();
+  void renderAxisLines();
+  //FOR VERTEX: render the 3 lines showing the current axis of editing
+  void renderEditingAxis();
   // setups common data for all types of render
   void processDrawCall(Render_type type_of_render);
 

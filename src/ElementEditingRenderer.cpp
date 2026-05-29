@@ -8,8 +8,6 @@
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
-#include <glm/ext/quaternion_geometric.hpp>
-#include <glm/ext/vector_float3.hpp>
 #include <iostream>
 #include <vector>
 
@@ -18,6 +16,7 @@ void ElementEditingRenderer::processDrawCall(Render_type type_of_render) {
   setViewProjectionMatrices();
   glfwGetFramebufferSize(window, (&width), &height);
   glViewport(0, 0, width, height);
+
   switch (type_of_render) {
   case main_render_pass:
     mainRenderPass();
@@ -113,6 +112,9 @@ void ElementEditingRenderer::mainRenderPass() {
   glEnable(GL_CULL_FACE);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glEnable(GL_PROGRAM_POINT_SIZE);
+
+  //renderAxisLines();
+
   int face_offset = 0;
   int vertex_offset = current_scene->getFaceSelectionArray()->size();
   int edges_offset = current_scene->getFaceSelectionArray()->size() +
@@ -131,7 +133,6 @@ void ElementEditingRenderer::mainRenderPass() {
     shader->setUint("current_rendering_mode", current_rendering_mode);
     shader->setUint("faces_offset", face_offset);
     face_offset += mesh->getFaces().size();
-
     glBindVertexArray(ri.VAO);
     glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(),
                    GL_UNSIGNED_INT, 0);
@@ -213,7 +214,6 @@ void ElementEditingRenderer::setViewProjectionMatrices() {
   }
 }
 
-//@TODO later, change it into different function that generates new renders
 void ElementEditingRenderer::shaderSetup() {
   // the paths for the color pass
   std::string root = ROOT_DIR;
@@ -231,6 +231,9 @@ void ElementEditingRenderer::shaderSetup() {
       root + "shaders/mesh_editing/element_detection/vertices/";
   std::string edge_detection_dir =
       root + "shaders/mesh_editing/element_detection/edges/";
+
+  std::string axis_lines_dir=root+"shaders/mesh_editing/main_window/";
+
   shaders.resize(Shader_names::shader_count); // resize to create elements
 
   shaders[Shader_names::face_color_pass] =
@@ -259,7 +262,9 @@ void ElementEditingRenderer::shaderSetup() {
       std::make_unique<Shader>(edge_detection_dir + "edgeDetection.vert",
                                edge_detection_dir + "edgeDetection.geom",
                                edge_detection_dir + "edgeDetection.frag");
-
+  shaders[Shader_names::axis_lines_shader] =
+     std::make_unique<Shader>(axis_lines_dir+"gridline.vert",
+       axis_lines_dir+"gridline.frag");
   setViewProjectionMatrices();
 }
 
@@ -377,4 +382,47 @@ bool ElementEditingRenderer::rendererIsReady(std::string *out_error) const {
     return fail("Framebuffer not set up.");
 
   return true;
+}
+
+void ElementEditingRenderer::setupAxisLines() {
+  //space between lines
+  float line_offset=1;
+  int line_quantity=30;//lines per quadrant
+  glm::vec3 x_coord=grid_origin,y_coord=grid_origin,z_coord=grid_origin;
+  for (int i=0;i<line_quantity;i++) {
+    float offset=line_offset*i;
+    axis_lines.push_back(glm::vec3( x_coord.x+offset,x_coord.y,x_coord.z+line_offset*line_quantity));
+    axis_lines.push_back(glm::vec3(x_coord.x+offset,x_coord.y,x_coord.z-line_offset*line_quantity));
+    axis_lines.push_back(glm::vec3( x_coord.x+offset,x_coord.y+line_offset*line_quantity,x_coord.z));
+    axis_lines.push_back(glm::vec3(x_coord.x+offset,x_coord.y-line_offset*line_quantity,x_coord.z));
+    if (i!=0) {
+      axis_lines.push_back(glm::vec3( x_coord.x-offset,x_coord.y,x_coord.z+line_offset*line_quantity));
+      axis_lines.push_back(glm::vec3(x_coord.x-offset,x_coord.y,x_coord.z-line_offset*line_quantity));
+      axis_lines.push_back(glm::vec3( x_coord.x-offset,x_coord.y+line_offset*line_quantity,x_coord.z));
+      axis_lines.push_back(glm::vec3(x_coord.x-offset,x_coord.y-line_offset*line_quantity,x_coord.z));
+
+    }
+
+  }
+  glGenVertexArrays(1,&axis_lines_VAO);
+  glGenBuffers(1,&axis_lines_VBO);
+  glBindBuffer(GL_ARRAY_BUFFER,axis_lines_VBO);
+  glBufferData(GL_ARRAY_BUFFER,axis_lines.size()*sizeof(glm::vec3),axis_lines.data(),GL_STATIC_DRAW);
+  glBindVertexArray(axis_lines_VAO);
+  glBindBuffer(GL_ARRAY_BUFFER,axis_lines_VBO);
+  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(glm::vec3),(void*)0);
+  glEnableVertexAttribArray(0);
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER,0);
+}
+void ElementEditingRenderer::renderAxisLines() {
+  shaders[axis_lines_shader]->use();
+  glBindVertexArray(axis_lines_VAO);
+  glDrawArrays(GL_LINES,0,axis_lines.size());
+
+}
+
+
+void ElementEditingRenderer::renderEditingAxis() {
+
 }
