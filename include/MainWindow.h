@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include "ElementEditing.h"
 #include "ElementEditingRenderer.h"
 #include "GUI.h"
 #include "Mesh.h"
@@ -72,6 +73,7 @@ private:
   GLFWwindow *window;
   GUI gui;
   std::unique_ptr<ElementEditingRenderer> renderer;
+  std::unique_ptr<ElementEditing> element_editing;
   std::map<std::string, std::unique_ptr<Scene>> scene_name_to_scene_object;
   bool has_scene_changed = false;
   float delta_time = 0.0f;
@@ -102,14 +104,15 @@ public:
 
     renderer->setCurrentScene(scene_name_to_scene_object["default"].get());
     renderer->setScreenSize(width, height);
-    renderer->setRenderMode(FACE_EDITING
-    );
+    renderer->setRenderMode(FACE_EDITING);
 
     glfwSetWindowUserPointer(window, this);
     glfwSetKeyCallback(window, mainWindowKeyCallback);
     glfwSetMouseButtonCallback(window, mainWindowMouseCallback);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     glfwSetScrollCallback(window, mainWindowScrollCallback);
+    element_editing= std::make_unique<ElementEditing>(default_scene.get());
+
   }
 
   // Getters and Setters
@@ -154,5 +157,7 @@ public:
   void addScene(std::string name, std::unique_ptr<Scene> scene) {
     scene_name_to_scene_object[name] = std::move(scene);
   }
+  glm::vec2 getMouseNDC(GLFWwindow* window);
   void processInput();
+
 };

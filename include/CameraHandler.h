@@ -2,22 +2,12 @@
 
 #pragma once
 
+#include "CommonTypes.h"
+#include <GLFW/glfw3.h>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
-#include <GLFW/glfw3.h>
 #include <numbers>
-enum CameraMode {
-	GIMBALL,//camera view fixed on the center of the object
-	FREE,//camera free to move and rotate
-};
-
-enum CameraMovement{
-  LEFT,
-  RIGHT,
-  UP,
-  DOWN,
-};
 class CameraHandler {
   private:
   float pi = std::numbers::pi_v<float>;
@@ -33,13 +23,13 @@ class CameraHandler {
   float elevation = 0.0f;   // vertical angle(radians)
 
   glm::vec3 camera_pos;
-  glm::vec3 camera_normal={0.0f,1.0f,0.0f};
+  glm::vec3 camera_up={0.0f,1.0f,0.0f};
   glm::vec3 target = glm::vec3(0.0f); // point to orbit around
 
   // Clamp elevation so camera doesn't flip upside down
   const float MAX_ELEVATION = glm::radians(89.0f);
   const float MIN_ELEVATION = glm::radians(-89.0f);
-  glm::mat4 current_view_matrix=glm::lookAt(camera_pos, target, camera_normal);
+  glm::mat4 current_view_matrix=glm::lookAt(camera_pos, target, camera_up);
  public:
   CameraHandler(){
     const bool no_keys[1024] = {};
@@ -57,6 +47,12 @@ class CameraHandler {
   }
   void setCurrentCameraMode(CameraMode camera_mode){
     this->current_camera_mode=camera_mode;
+  }
+  glm::vec3 getCameraPosition() {
+    return camera_pos;
+  }
+  glm::vec3 getCameraFront() {
+    return target;
   }
 };
 

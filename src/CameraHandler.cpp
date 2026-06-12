@@ -31,7 +31,7 @@ void CameraHandler::gimballCameraUpdate(const bool *keys) {
   y = std::sin(elevation) * RADIUS;
   z = std::sin(azimuth) * std::cos(elevation) * RADIUS;
   camera_pos = {x, y, z};
-  current_view_matrix = glm::lookAt(camera_pos, target, camera_normal);
+  current_view_matrix = glm::lookAt(camera_pos, target, camera_up);
 }
 
 void CameraHandler::processZoom(double yoffset) {
@@ -47,7 +47,7 @@ void CameraHandler::processZoom(double yoffset) {
     y = std::sin(elevation) * RADIUS;
     z = std::sin(azimuth) * std::cos(elevation) * RADIUS;
     camera_pos = {x, y, z};
-    current_view_matrix = glm::lookAt(camera_pos, target, camera_normal);
+    current_view_matrix = glm::lookAt(camera_pos, target, camera_up);
     break;
   case FREE:
     break;

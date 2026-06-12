@@ -12,6 +12,9 @@
 #include <optional>
 #include <tuple>
 #include <utility>
+
+#include "ElementEditing.h"
+
 struct FramebufferInfo {
   unsigned int FBO;
   unsigned int texture;
@@ -35,6 +38,7 @@ enum Shader_names {
  **/
 class ElementEditingRenderer {
 private:
+
   Scene *current_scene;            // scene currently being drawn
   GUIState current_rendering_mode; // FACE, VERTEX OR EDGE EDITING
   GLFWwindow *window;
@@ -50,12 +54,11 @@ private:
   unsigned int axis_lines_VBO,axis_lines_VAO;
 public:
   ElementEditingRenderer(GLFWwindow *window, Scene *start_scene)
-      : window(window), current_scene(start_scene), width(0), height(0) {
+    : window(window), current_scene(start_scene), width(0), height(0)
+  {
     FramebufferSetup();
     shaderSetup();
     setupAxisLines();
-
-
   }
 
   // Getters and Setters
@@ -94,10 +97,10 @@ public:
   void resizeFramebuffer();
   void setViewProjectionMatrices();
   void updateModelMatrices(); // updates all given model matrices, for now
-
+  std::pair<int, int> getCursorPositionInViewport(GLFWwindow *window);
   void cleanup();
   bool rendererIsReady(std::string *out_error = nullptr) const;
   std::optional<std::tuple<unsigned int, unsigned int, unsigned int>>
   meshElementDetection();
-  std::pair<int, int> getCursorPositionInViewport(GLFWwindow *window);
 };
+

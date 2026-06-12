@@ -59,6 +59,7 @@ target_compile_definitions(VertexEditorCore PUBLIC
 )
 
 # --- Main Executable ---
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} main.cpp
+        include/CommonTypes.h)
 target_link_libraries(${PROJECT_NAME} PRIVATE VertexEditorCore)
 

@@ -8,40 +8,44 @@
 #include <glm/ext/vector_float3.hpp>
 #include <glm/matrix.hpp>
 #include <vector>
-void Scene::updateFacesSelected(unsigned int face_id, unsigned int mesh_id) {
-  unsigned int global_face_id = 0;
-  for (int i = 0; i < mesh_id; i++) {
-    global_face_id += meshes[i]->getFaces().size();
-  }
-  // change the state of the face in the global array
-  face_selection_array[global_face_id + face_id] =
-      !face_selection_array[global_face_id + face_id];
-  updateSelectionBuffer(FACE_EDITING);
-}
 
-void Scene::updateVerticesSelected(unsigned int vertex_id,
-                                   unsigned int mesh_id) {
+
+
+void Scene::updateElementSelected(ElementType element_type,unsigned int mesh_id,unsigned int element_id){
   unsigned int global_id = 0;
-  for (int i = 0; i < mesh_id; i++) {
-    global_id += meshes[i]->getVertices().size();
+  switch (element_type)
+  {
+  case VERTEX:
+    for (int i = 0; i < mesh_id; i++) {
+      global_id += meshes[i]->getVertices().size();
+    }
+    // change the state of the vertex in the global array
+    vertex_selection_array[global_id + element_id] =
+        !vertex_selection_array[global_id + element_id];
+    updateSelectionBuffer(VERTEX_EDITING);
+    break;
+  case FACE:
+    for (int i = 0; i < mesh_id; i++)
+    {
+      global_id += meshes[i]->getFaces().size();
+    }
+      face_selection_array[global_id + element_id] =!face_selection_array[global_id + element_id];
+      updateSelectionBuffer(FACE_EDITING);
+    break;
+  case EDGE:
+    for (int i = 0; i < mesh_id; i++) {
+      global_id += meshes[i]->getEdges().size();
+    }
+
+    // change the state of the edge in the global array
+    edge_selection_array[global_id + element_id] =
+        !edge_selection_array[global_id + element_id];
+    updateSelectionBuffer(EDGE_EDITING);
+    break;
+
   }
-  // change the state of the vertex in the global array
-  vertex_selection_array[global_id + vertex_id] =
-      !vertex_selection_array[global_id + vertex_id];
-  updateSelectionBuffer(VERTEX_EDITING);
 }
 
-void Scene::updateEdgesSelected(unsigned int edge_id, unsigned int mesh_id) {
-  unsigned int global_id = 0;
-  for (int i = 0; i < mesh_id; i++) {
-    global_id += meshes[i]->getEdges().size();
-  }
-
-  // change the state of the edge in the global array
-  edge_selection_array[global_id + edge_id] =
-      !edge_selection_array[global_id + edge_id];
-  updateSelectionBuffer(EDGE_EDITING);
-}
 void Scene::resetVertexAlreadyRendered() {
   std::fill(vertex_already_rendered_array.begin(),
             vertex_already_rendered_array.end(), 0);
@@ -51,6 +55,7 @@ void Scene::resetVertexAlreadyRendered() {
                   vertex_already_rendered_array.data());
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
+
 void Scene::resetSelectionBuffer(GUIState type) {
   switch (type) {
   case FACE_EDITING:
@@ -138,10 +143,10 @@ void Scene::meshArraysSetup(Mesh *mesh) {
 void Scene::meshRenderInfoSetup(Mesh *mesh) {
   // generate VAO,VBO,EBO for the mesh
   RenderInfo *ri = &mesh_to_render_info[mesh];
-  glGenVertexArrays(1, &ri->VAO);
+  glGenVertexArrays(1, &ri->vertex_VAO);
   glGenVertexArrays(1, &ri->edge_VAO);
-  glGenBuffers(1, &ri->VBO);
-  glGenBuffers(1, &ri->EBO);
+  glGenBuffers(1, &ri->vertex_VBO);
+  glGenBuffers(1, &ri->vertex_EBO);
   glGenBuffers(1, &ri->edge_EBO);
 
   // generates the VBO vector in render info
@@ -160,11 +165,11 @@ void Scene::meshRenderInfoSetup(Mesh *mesh) {
   for (int i = 0; i < edges.size(); i++) {
   }
   // send the vertex data to the GPU
-  glBindBuffer(GL_ARRAY_BUFFER, ri->VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, ri->vertex_VBO);
   glBufferData(GL_ARRAY_BUFFER,
                ri->VBO_faces_vertices_data.size() * sizeof(glm::vec3),
                ri->VBO_faces_vertices_data.data(), GL_STATIC_DRAW);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ri->EBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ri->vertex_EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                mesh->getFaceRenderIndices().size() * sizeof(unsigned int),
                mesh->getFaceRenderIndices().data(), GL_STATIC_DRAW);
@@ -174,9 +179,9 @@ void Scene::meshRenderInfoSetup(Mesh *mesh) {
                mesh->getEdgeRenderIndices().data(), GL_STATIC_DRAW);
 
   // setup face and vertex VAO
-  glBindVertexArray(ri->VAO);
-  glBindBuffer(GL_ARRAY_BUFFER, ri->VBO);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ri->EBO);
+  glBindVertexArray(ri->vertex_VAO);
+  glBindBuffer(GL_ARRAY_BUFFER, ri->vertex_VBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ri->vertex_EBO);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec3),
                         (void *)0); // vertex information
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec3),
@@ -187,7 +192,7 @@ void Scene::meshRenderInfoSetup(Mesh *mesh) {
 
   // setup edge VAO 
   glBindVertexArray(ri->edge_VAO);
-  glBindBuffer(GL_ARRAY_BUFFER, ri->VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, ri->vertex_VBO);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ri->edge_EBO);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec3),
                         (void *)0);
@@ -236,13 +241,26 @@ glm::mat3 Scene::getNormalMatrixFromModel(glm::mat4 model_matrix) {
   return glm::transpose(glm::inverse(glm::mat3(model_matrix)));
 }
 
+
+void Scene::updateVertexPos(unsigned int mesh_id, unsigned int vertex_id, glm::vec3 new_pos) {
+  Mesh *mesh_selected=meshes[mesh_id].get();
+  mesh_selected->getvVertexFromIndex(vertex_id).point=new_pos;
+
+
+  RenderInfo *ri=&getRenderInfo(mesh_selected);
+  glBindBuffer(GL_ARRAY_BUFFER, ri->vertex_VBO);
+  glBufferData(GL_ARRAY_BUFFER,
+               ri->VBO_faces_vertices_data.size() * sizeof(glm::vec3),
+               ri->VBO_faces_vertices_data.data(), GL_STATIC_DRAW);
+
+}
 void Scene::cleanup() {
 
   for (const auto &mesh : meshes) {
     Mesh *mesh_ptr = mesh.get();
-    glDeleteVertexArrays(1, &mesh_to_render_info[mesh_ptr].VAO);
-    glDeleteBuffers(1, &mesh_to_render_info[mesh_ptr].VBO);
-    glDeleteBuffers(1, &mesh_to_render_info[mesh_ptr].EBO);
+    glDeleteVertexArrays(1, &mesh_to_render_info[mesh_ptr].vertex_VAO);
+    glDeleteBuffers(1, &mesh_to_render_info[mesh_ptr].vertex_VBO);
+    glDeleteBuffers(1, &mesh_to_render_info[mesh_ptr].vertex_EBO);
     glDeleteVertexArrays(1, &mesh_to_render_info[mesh_ptr].edge_VAO);
     glDeleteBuffers(1, &mesh_to_render_info[mesh_ptr].edge_EBO);
   }
@@ -275,11 +293,11 @@ bool Scene::sceneIsReady(std::string *out_error) const {
       return fail("Mesh missing render info.");
 
     const RenderInfo &info = it->second;
-    if (info.VAO == 0)
+    if (info.vertex_VAO == 0)
       return fail("Mesh has invalid VAO.");
-    if (info.VBO == 0)
+    if (info.vertex_VBO == 0)
       return fail("Mesh has invalid VBO.");
-    if (info.EBO == 0)
+    if (info.vertex_EBO == 0)
       return fail("Mesh has invalid EBO.");
   }
 

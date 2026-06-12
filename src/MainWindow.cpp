@@ -29,15 +29,19 @@ glm::vec3 generateRandomColor() {
 // given the scene to render, the window will render all objects
 // mainWindow always initializes with a default window named "default"
 void MainWindow::use(std::string *scene_name) {
+
   std::string default_scene_name = "default";
   if (scene_name == nullptr)
     scene_name = &default_scene_name;
   // the renderer will accept the scene and draw it in the screen
   renderer->setCurrentScene(scene_name_to_scene_object[*scene_name].get());
-
+  element_editing->setCurrentScene(scene_name_to_scene_object[*scene_name].get());
   std::string error;
   if (isWindowReady(&error)) {
     while (!glfwWindowShouldClose(window)) {
+      element_editing->setViewProjectionMatrix(renderer->getCurrentScene()->getViewProjectionMatrix());
+      element_editing->setCurrentSelectedElement(VERTEX,0,0);
+      element_editing->vertexRayCaster(getMouseNDC(window),camera.getCameraPosition(),camera.getCameraFront());
       float time = glfwGetTime();
       delta_time = time - last_frame;
       last_frame = time;
@@ -95,6 +99,8 @@ void MainWindow::framebufferSizeCallback(GLFWwindow *window, int width,
 void MainWindow::onFramebufferSize() {
   renderer->setScreenSize(width, height);
   renderer->resizeFramebuffer();
+  element_editing->setScreenSize(width,height);
+
 }
 
 void MainWindow::mainWindowMouseCallback(GLFWwindow *window, int button,
@@ -117,23 +123,26 @@ void MainWindow::onMouseButton(int button, int action, int mods) {
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
     renderer->processDrawCall(element_detection_pass);
     auto result = renderer->meshElementDetection();
-    if (!(mods & GLFW_MOD_SHIFT)) { // shift+left click, reset if the user is
-                                    // not using shift
-      renderer->getCurrentScene()->resetSelectionBuffer(gui.getCurrentState());
-    }
+    // if (!(mods & GLFW_MOD_SHIFT)) { // shift+left click, reset if the user is
+    //                                 // not using shift
+    //
+    // }
+    renderer->getCurrentScene()->resetSelectionBuffer(gui.getCurrentState());
     if (result) {
       auto [clicked_ID, mesh_id, empty] = *result;
       switch (gui.getCurrentState()) {
       case FACE_EDITING:
-        renderer->getCurrentScene()->updateFacesSelected(clicked_ID, mesh_id);
+        renderer->getCurrentScene()->updateElementSelected(FACE,mesh_id, clicked_ID);
+        element_editing->setCurrentSelectedElement(FACE,mesh_id, clicked_ID);
         break;
 
       case VERTEX_EDITING:
-        renderer->getCurrentScene()->updateVerticesSelected(clicked_ID,
-                                                            mesh_id);
+        renderer->getCurrentScene()->updateElementSelected(VERTEX,mesh_id, clicked_ID);
+        element_editing->setCurrentSelectedElement(VERTEX,mesh_id, clicked_ID);
         break;
       case EDGE_EDITING:
-        renderer->getCurrentScene()->updateEdgesSelected(clicked_ID, mesh_id);
+        renderer->getCurrentScene()->updateElementSelected(EDGE,mesh_id, clicked_ID);
+        element_editing->setCurrentSelectedElement(EDGE,mesh_id, clicked_ID);
         break;
       }
     }
@@ -176,8 +185,7 @@ void MainWindow::mainWindowScrollCallback(GLFWwindow *window, double xoffset,
     instance->onScrollCallback(window, xoffset, yoffset);
   }
 }
-void MainWindow::onScrollCallback(GLFWwindow *window, double xoffset,
-                                  double yoffset) {
+void MainWindow::onScrollCallback(GLFWwindow *window, double xoffset,double yoffset) {
   camera.processZoom(-yoffset);
 }
 
@@ -208,4 +216,14 @@ bool MainWindow::isWindowReady(std::string *out_error) const {
     return fail("All scenes are null.");
 
   return true;
+}
+glm::vec2 MainWindow::getMouseNDC(GLFWwindow* window) {
+  double x, y;
+  int w, h;
+  glfwGetCursorPos(window, &x, &y);
+  glfwGetWindowSize(window, &w, &h);
+  return {
+    (float)(x / w) * 2.0f - 1.0f,
+    (float)((h - y) / h) * 2.0f - 1.0f  // flip y
+};
 }

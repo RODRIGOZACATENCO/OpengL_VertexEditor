@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "ElementEditing.h"
 #include "GUI.h"
 #include "Mesh.h"
 
@@ -30,9 +31,9 @@ struct EdgeNormals{
 };
 
 struct RenderInfo {
-  unsigned int VAO;
-  unsigned int VBO;
-  unsigned int EBO;
+  unsigned int vertex_VAO;
+  unsigned int vertex_VBO;
+  unsigned int vertex_EBO;
   unsigned int edge_VAO;
   unsigned int edge_EBO;
   std::vector<glm::vec3> VBO_faces_vertices_data; //(vertex,normal)
@@ -107,6 +108,7 @@ public:
     view_projection_matrix = projection * view;
   }
 
+  void updateVertexPos(unsigned int mesh_id,unsigned int vertex_id,glm::vec3 new_pos) ;
   
   const glm::mat4 &getViewProjectionMatrix() const {
     return view_projection_matrix;
@@ -134,10 +136,7 @@ public:
   void resetSelectionBuffer(GUIState type);
   void meshRenderInfoSetup(Mesh *mesh);
   void resetVertexAlreadyRendered();
-  void updateFacesSelected(unsigned int face_id, unsigned int mesh_id);
-  void updateVerticesSelected(unsigned int vertex_id, unsigned int mesh_id);
-  void updateEdgesSelected(unsigned int edge_id, unsigned int mesh_id);
 
-  glm::mat4 updateNormalMatrix();
+  void updateElementSelected(ElementType element_type,unsigned int mesh_id,unsigned int element_id);
   void cleanup();
 };

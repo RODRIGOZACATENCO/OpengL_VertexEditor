@@ -48,7 +48,7 @@ void ElementEditingRenderer::elementDetectionPass() {
       RenderInfo ri = current_scene->getRenderInfo(mesh);
       shaders[face_detection]->setMat4("model", ri.model);
       shaders[face_detection]->setUint("MeshID", mesh_id++);
-      glBindVertexArray(ri.VAO);
+      glBindVertexArray(ri.vertex_VAO);
       glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(),
                      GL_UNSIGNED_INT, 0);
       glBindVertexArray(0);
@@ -69,7 +69,7 @@ void ElementEditingRenderer::elementDetectionPass() {
       shaders[vertex_detection]->setUint("MeshID", mesh_id++);
       shaders[vertex_detection]->setUint("vertex_offset", vertex_offset);
       vertex_offset += mesh->getVertices().size();
-      glBindVertexArray(ri.VAO);
+      glBindVertexArray(ri.vertex_VAO);
       glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(),
                      GL_UNSIGNED_INT, 0);
       glBindVertexArray(0);
@@ -124,7 +124,7 @@ void ElementEditingRenderer::mainRenderPass() {
   for (const auto &mesh_ptr : current_scene->getMeshes()) {
     Mesh *mesh = mesh_ptr.get();
     RenderInfo ri = current_scene->getRenderInfo(mesh);
-    // renders the default mesh color, grey with green outline on the edges
+    // renders the default mesh color, gray with green outline on the edges
     // Render default pass (base color + outline) AFTER face pass so outline is
     // on top
     Shader *shader = shaders[face_color_pass].get();
@@ -133,7 +133,7 @@ void ElementEditingRenderer::mainRenderPass() {
     shader->setUint("current_rendering_mode", current_rendering_mode);
     shader->setUint("faces_offset", face_offset);
     face_offset += mesh->getFaces().size();
-    glBindVertexArray(ri.VAO);
+    glBindVertexArray(ri.vertex_VAO);
     glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(),
                    GL_UNSIGNED_INT, 0);
 
@@ -160,7 +160,7 @@ void ElementEditingRenderer::mainRenderPass() {
       shader->setMat4("model", ri.model);
       shader->setInt("num_vertices_offset", vertex_offset);
       vertex_offset += mesh->getVertices().size();
-      glBindVertexArray(ri.VAO);
+      glBindVertexArray(ri.vertex_VAO);
       glDrawArrays(GL_POINTS, 0, mesh->getVertices().size());
     }
     glDisable(GL_POLYGON_OFFSET_FILL);
@@ -334,8 +334,6 @@ ElementEditingRenderer::meshElementDetection() {
   glBindFramebuffer(GL_FRAMEBUFFER, element_detection_framebuffer_info.FBO);
   glReadBuffer(GL_COLOR_ATTACHMENT0);
   unsigned int pixel_data[3];
-  GLint currentFBO;
-  glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &currentFBO);
   glReadPixels(framebuffer_x, framebuffer_y, 1, 1, GL_RGB_INTEGER,
                GL_UNSIGNED_INT, &pixel_data);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -346,12 +344,12 @@ ElementEditingRenderer::meshElementDetection() {
   return {{pixel_data[0] - 1, pixel_data[1], pixel_data[2]}};
 }
 
-std::pair<int, int>
-ElementEditingRenderer::getCursorPositionInViewport(GLFWwindow *window) {
+std::pair<int, int> ElementEditingRenderer::getCursorPositionInViewport(GLFWwindow *window) {
 
   // GLFW cursor: 0,0 is top left corner, width,height is bottom right corner
   // glReadPixels: 0,0 is bottom left corner, width,height is top right corner
   double mouse_x, mouse_y;
+  int width, height;
   glfwGetCursorPos(window, &mouse_x, &mouse_y);
   glfwGetWindowSize(window, &width, &height);
   int framebuffer_width, framebuffer_height;

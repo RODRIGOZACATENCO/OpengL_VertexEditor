@@ -144,8 +144,6 @@ void GUI::showMainWindowGUI()
 	{
 		reset_selection_buffer_flag=EDGE_EDITING;//set the flag to reset the selection buffer on the GPU in the main loop
 	}
-
-
 	ImGui::End();
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

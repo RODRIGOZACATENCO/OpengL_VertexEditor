@@ -1,36 +1,44 @@
 #pragma once
 #define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
-#include <glad/glad.h>
-#include <glm/glm.hpp>
+
 #include <iostream>
-enum ElementType {
-  FACE,
-  VERTEX,
-  LINE,
-};
-enum LineType {
-  X,
-  Y,
-  Z
-};
-//asuming (0,0,0) is the vertex selected
-/*
- * Vertex:
- * when selected, pressing x,y,z will render a line in
- * that direction, then the user will hold mouse and
- * move the vertex along this line, lines will be the
- * same size regardless of mesh distance and size, render on top of the mesh
- *
- *
- */
+
+#include <tuple>
+#include "../include/Scene.h"
+#include "CommonTypes.h"
+
+class Scene;
 class ElementEditing {
 private:
-	std::pair<ElementType, int> selected_element;
-  LineType selected_line;
+  /*type of element, mesh_id, element_id*/
+  std::tuple<ElementType,unsigned int,unsigned int> selected_element;
+
+  Scene *current_scene;
+  glm::mat4 inverse_view_projection_matrix;
+  int window_width,window_height;
+
 public:
-  //will render the tree axis lines first
+  ElementEditing(Scene *current_scene){
+
+    this->current_scene=current_scene;
+  }
+  void setScreenSize(unsigned int width, unsigned int height) {
+    this->window_width = width;
+    this->window_height = height;
+  }
+  void setCurrentScene(Scene *scene) {
+    this->current_scene=scene;
+  }
+  void setViewProjectionMatrix(glm::mat4 view_projection_matrix) {
+    this->inverse_view_projection_matrix = glm::inverse(view_projection_matrix);
+  }
+  void setCurrentSelectedElement(ElementType element_type,unsigned int mesh_id,unsigned int element_id)
+  {
+    this->selected_element={element_type,mesh_id,element_id};
+  }
   void vertex_editing();
   void face_editing();
   void line_editing();
+  void vertexMovement();
+  void vertexRayCaster(glm::vec2 mouse_pos,glm::vec3 camera_pos,glm::vec3 camera_front);
 };

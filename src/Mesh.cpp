@@ -109,7 +109,7 @@ void Mesh::process_mesh(std::vector<float> *input_vertices,
 
 /*given the complete mesh, calculate the normal vector of each vertex
  taking the average normal across all faces */
-void Mesh::computevertexNormalVectors() {
+void Mesh::computeVertexNormalVectors() {
   for (auto &vertex : vertices) {
     // starting face to test
     glm::vec3 sum = glm::vec3(0.0f);
@@ -140,6 +140,7 @@ void Mesh::computevertexNormalVectors() {
   }
 }
 
+/*calculates the normal direction of each face*/
 void Mesh::computeFaceNormalVectors() {
   for (auto &face : faces) {
     auto [vertex1, vertex2, vertex3] = vertexIndicesFromFace(face);
