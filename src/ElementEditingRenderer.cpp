@@ -12,7 +12,6 @@
 #include <vector>
 
 void ElementEditingRenderer::processDrawCall(Render_type type_of_render) {
-  updateModelMatrices();
   setViewProjectionMatrices();
   glfwGetFramebufferSize(window, (&width), &height);
   glViewport(0, 0, width, height);
@@ -45,7 +44,7 @@ void ElementEditingRenderer::elementDetectionPass() {
     shaders[face_detection]->use();
     for (const auto &mesh_ptr : current_scene->getMeshes()) {
       Mesh *mesh = mesh_ptr.get();
-      RenderInfo ri = current_scene->getRenderInfo(mesh);
+      RenderInfo ri = current_scene->getRenderInfoFromMesh(mesh);
       shaders[face_detection]->setMat4("model", ri.model);
       shaders[face_detection]->setUint("MeshID", mesh_id++);
       glBindVertexArray(ri.vertex_VAO);
@@ -60,7 +59,7 @@ void ElementEditingRenderer::elementDetectionPass() {
     unsigned int vertex_offset = 0;
     for (const auto &mesh_ptr : current_scene->getMeshes()) {
       Mesh *mesh = mesh_ptr.get();
-      RenderInfo ri = current_scene->getRenderInfo(mesh);
+      RenderInfo ri = current_scene->getRenderInfoFromMesh(mesh);
       shaders[vertex_detection]->setMat4("model", ri.model);
       shaders[vertex_detection]->setMat4("projection",
                                          current_scene->getProjectionMatrix());
@@ -81,7 +80,7 @@ void ElementEditingRenderer::elementDetectionPass() {
     unsigned int edge_faces_normal_offset = 0;
     for (const auto &mesh_ptr : current_scene->getMeshes()) {
       Mesh *mesh = mesh_ptr.get();
-      RenderInfo ri = current_scene->getRenderInfo(mesh);
+      RenderInfo ri = current_scene->getRenderInfoFromMesh(mesh);
       shader->setMat4("model", ri.model);
       shader->setMat3("normal_matrix",
                       current_scene->getNormalMatrixFromModel(ri.model));
@@ -123,7 +122,7 @@ void ElementEditingRenderer::mainRenderPass() {
   unsigned int edge_faces_normal_offset = 0;
   for (const auto &mesh_ptr : current_scene->getMeshes()) {
     Mesh *mesh = mesh_ptr.get();
-    RenderInfo ri = current_scene->getRenderInfo(mesh);
+    RenderInfo ri = current_scene->getRenderInfoFromMesh(mesh);
     // renders the default mesh color, gray with green outline on the edges
     // Render default pass (base color + outline) AFTER face pass so outline is
     // on top
@@ -274,7 +273,7 @@ void ElementEditingRenderer::updateModelMatrices() {
     auto *mesh = current_scene->getMeshes()[i].get();
     auto name = current_scene->getMeshName(mesh);
     glm::quat &object_orientation =
-        current_scene->getRenderInfo(mesh).object_orientation;
+        current_scene->getRenderInfoFromMesh(mesh).object_orientation;
     glm::vec3 rotation_axis = {1.0f, 0.2f, 0.5f};
     float rotation_speed = pi / 10;
     // model for piramid

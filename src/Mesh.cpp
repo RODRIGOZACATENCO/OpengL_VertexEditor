@@ -113,12 +113,12 @@ void Mesh::computeVertexNormalVectors() {
   for (auto &vertex : vertices) {
     // starting face to test
     glm::vec3 sum = glm::vec3(0.0f);
-    unsigned int count = 0, check_backwards = 0;
+    unsigned int check_backwards = 0;
     HalfEdge *start_halfedge = &half_edges[vertex.halfedge];
     auto current_halfedge = start_halfedge;
     do {
       sum += faces[current_halfedge->face].normal;
-      count++;
+
       if (current_halfedge->twin == -1) {
         check_backwards = true;
         break;
@@ -133,10 +133,10 @@ void Mesh::computeVertexNormalVectors() {
           break;
         current_halfedge = &half_edges[half_edges[current_halfedge->prev].twin];
         sum += faces[current_halfedge->face].normal;
-        count++;
+
       } while (true);
     }
-    vertex.normal = glm::normalize(sum / (float)count);
+    vertex.normal = glm::normalize(sum);
   }
 }
 

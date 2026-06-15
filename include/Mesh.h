@@ -68,7 +68,7 @@ public:
     return  edge_lookup;
   }
   HalfEdge getHalfedgeFromIndex(unsigned int index) { return half_edges[index]; }
-  Vertex getvVertexFromIndex(unsigned int index) { return vertices[index]; }
+  Vertex &getvVertexFromIndex(unsigned int index) { return vertices[index]; }
   Edge getEdgeFromIndex(unsigned int index) { return edges[index]; }
 
 

@@ -91,11 +91,11 @@ void Scene::meshArraysSetup(Mesh *mesh) {
   }
   for(int i = 0; i < mesh->getEdges().size(); i++) {
     auto [face_index_1, face_index_2] = mesh->getFaceIndicesAssociatedWithEdge(i);
-    EdgeNormals edgenormal;
+    EdgeNormal edgenormal;
     edgenormal.face_normal_1 = glm::vec4(mesh->getFaces()[face_index_1].normal, 0.0f);
     edgenormal.face_normal_2 = (face_index_2 != -1) ? glm::vec4(mesh->getFaces()[face_index_2].normal, 0.0f) : glm::vec4(0.0f);
     face_normal_vectors_data.push_back(edgenormal);
-  } 
+  }
 
   // Setup the combined face selection array to color selection on the window
   std::vector<int> combined_selection_array;
@@ -133,7 +133,7 @@ void Scene::meshArraysSetup(Mesh *mesh) {
   glGenBuffers(1, &face_normal_vectors_SSBO);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, face_normal_vectors_SSBO);
   glBufferData(GL_SHADER_STORAGE_BUFFER,
-               face_normal_vectors_data.size() * sizeof(EdgeNormals),
+               face_normal_vectors_data.size() * sizeof(EdgeNormal),
                face_normal_vectors_data.data(), GL_STATIC_DRAW);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, face_normal_vectors_SSBO);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -157,8 +157,8 @@ void Scene::meshRenderInfoSetup(Mesh *mesh) {
 
   // setup of VBO_information of each mesh
   for (int i = 0; i < vertices.size(); i++) {
-    ri->VBO_faces_vertices_data.push_back(vertices[i].point);
-    ri->VBO_faces_vertices_data.push_back(vertices[i].normal);
+    ri->faces_vertices_data.push_back(vertices[i].point);
+    ri->faces_vertices_data.push_back(vertices[i].normal);
   }
 
   // setup of VBO for edge detection of each mesh
@@ -167,8 +167,8 @@ void Scene::meshRenderInfoSetup(Mesh *mesh) {
   // send the vertex data to the GPU
   glBindBuffer(GL_ARRAY_BUFFER, ri->vertex_VBO);
   glBufferData(GL_ARRAY_BUFFER,
-               ri->VBO_faces_vertices_data.size() * sizeof(glm::vec3),
-               ri->VBO_faces_vertices_data.data(), GL_STATIC_DRAW);
+               ri->faces_vertices_data.size() * sizeof(glm::vec3),
+               ri->faces_vertices_data.data(), GL_STATIC_DRAW);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ri->vertex_EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                mesh->getFaceRenderIndices().size() * sizeof(unsigned int),
@@ -246,13 +246,53 @@ void Scene::updateVertexPos(unsigned int mesh_id, unsigned int vertex_id, glm::v
   Mesh *mesh_selected=meshes[mesh_id].get();
   mesh_selected->getvVertexFromIndex(vertex_id).point=new_pos;
 
+  mesh_selected->computeFaceNormalVectors();
+  mesh_selected->computeVertexNormalVectors();
 
-  RenderInfo *ri=&getRenderInfo(mesh_selected);
-  glBindBuffer(GL_ARRAY_BUFFER, ri->vertex_VBO);
+  computeUpdatedMeshData(mesh_selected);
+
+  refreshMeshInformationOnRenderer(mesh_selected);
+
+}
+/*updates SSBO's. called when vertex update
+ * faces_vertices_data
+ * face_normal_vectors_data
+ *INNEFICIENT
+ */
+void Scene::computeUpdatedMeshData(Mesh *mesh) {
+  RenderInfo *ri=&getRenderInfoFromMesh(mesh);
+  ri->faces_vertices_data.clear();
+  for (int i = 0; i < mesh->getVertices().size(); i++) {
+    ri->faces_vertices_data.push_back( mesh->getVertices()[i].point);
+    ri->faces_vertices_data.push_back( mesh->getVertices()[i].normal);
+  }
+  face_normal_vectors_data.clear();
+  for(int i = 0; i < mesh->getEdges().size(); i++) {
+    auto [face_index_1, face_index_2] = mesh->getFaceIndicesAssociatedWithEdge(i);
+    EdgeNormal edgenormal;
+    edgenormal.face_normal_1 = glm::vec4(mesh->getFaces()[face_index_1].normal, 0.0f);
+    edgenormal.face_normal_2 = (face_index_2 != -1) ? glm::vec4(mesh->getFaces()[face_index_2].normal, 0.0f) : glm::vec4(0.0f);
+    face_normal_vectors_data.push_back(edgenormal);
+  }
+}
+
+/*refresh  buffers on OpenGL
+  * faces_vertices_data
+  * face_normal_vectors_SSBO
+  * vertex_VBO
+ */
+void Scene::refreshMeshInformationOnRenderer(Mesh *mesh) {
+  RenderInfo *ri=&getRenderInfoFromMesh(mesh);
+  glBindBuffer(GL_ARRAY_BUFFER,ri->vertex_VBO);
   glBufferData(GL_ARRAY_BUFFER,
-               ri->VBO_faces_vertices_data.size() * sizeof(glm::vec3),
-               ri->VBO_faces_vertices_data.data(), GL_STATIC_DRAW);
-
+                 ri->faces_vertices_data.size() * sizeof(glm::vec3),
+                 ri->faces_vertices_data.data(), GL_STATIC_DRAW);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER,face_normal_vectors_SSBO);
+  glBufferData(GL_SHADER_STORAGE_BUFFER,
+                 face_normal_vectors_data.size() * sizeof(EdgeNormal),
+                 face_normal_vectors_data.data(), GL_STATIC_DRAW);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER,0);
+  glBindBuffer(GL_ARRAY_BUFFER,0);
 }
 void Scene::cleanup() {
 

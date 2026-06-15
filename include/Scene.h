@@ -16,16 +16,8 @@
 #include "GUI.h"
 #include "Mesh.h"
 
-// Scene class stores al relevant information of the meshes in the viewport,
-// this includes
-/*
- *all mesh data
- *model, view and projection matrices of the scene
- *render information of each mesh (VAO,VBO,EBO, etc )
- *
- */
 //pair of face normals for each pair of vertices in an edge
-struct EdgeNormals{
+struct EdgeNormal{
   glm::vec4 face_normal_1;
   glm::vec4 face_normal_2;
 };
@@ -36,10 +28,19 @@ struct RenderInfo {
   unsigned int vertex_EBO;
   unsigned int edge_VAO;
   unsigned int edge_EBO;
-  std::vector<glm::vec3> VBO_faces_vertices_data; //(vertex,normal)
+  std::vector<glm::vec3> faces_vertices_data; //(vertex,normal)
   glm::quat object_orientation={1.0f, 0.0f, 0.0f, 0.0f};
   glm::mat4 model;
 };
+
+// Scene class stores al relevant information of the meshes in the viewport,
+// this includes
+/*
+ *all mesh data
+ *model, view and projection matrices of the scene
+ *render information of each mesh (VAO,VBO,EBO, etc )
+ *
+ */
 class Scene {
 private:
   glm::mat4 view;
@@ -53,8 +54,9 @@ private:
   // currently selected
   unsigned int selected_elements_SSBO = 0;
   unsigned int face_normal_vectors_SSBO = 0;
-  //structured in the same order as edge_render_indices i the mesh
-  std::vector<EdgeNormals> face_normal_vectors_data;
+
+  //structured in the same order as edge_render_indices in the mesh, used for edge detection and render
+  std::vector<EdgeNormal> face_normal_vectors_data;
 
   /*array that the vertex shaders use to determine wich vertices are already
 drawn, because vertex pass uses GL_TRIANGLES to draw
@@ -118,7 +120,7 @@ public:
 
   const std::vector<std::unique_ptr<Mesh>> &getMeshes() const { return meshes; }
 
-  RenderInfo &getRenderInfo(Mesh *mesh) { return mesh_to_render_info[mesh]; }
+  RenderInfo &getRenderInfoFromMesh(Mesh *mesh) { return mesh_to_render_info[mesh]; }
 
   std::vector<int> *getFaceSelectionArray() { return &face_selection_array; }
   std::vector<int> *getVertexSelectionArray() {
@@ -137,6 +139,8 @@ public:
   void meshRenderInfoSetup(Mesh *mesh);
   void resetVertexAlreadyRendered();
 
+  void refreshMeshInformationOnRenderer(Mesh *mesh);
+  void computeUpdatedMeshData(Mesh *mesh);//called when there's need to update VBO on the mesh
   void updateElementSelected(ElementType element_type,unsigned int mesh_id,unsigned int element_id);
   void cleanup();
 };
