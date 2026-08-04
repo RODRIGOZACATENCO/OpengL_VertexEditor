@@ -83,9 +83,7 @@ private:
 public:
   MainWindow(GLFWwindow *window) : window(window), width(0), height(0) {
     glfwGetFramebufferSize(window, &width, &height);
-    auto pyramid = std::make_unique<Mesh>(&piramid_vertices, &piramid_faces);
     auto cube = std::make_unique<Mesh>(&cube_vertices, &faces);
-
     glm::mat4 projection = glm::perspective(
         glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 
@@ -93,7 +91,6 @@ public:
         std::make_unique<Scene>(camera.getCurrentViewMatrix(),
                                 projection); // initialize the default scene
 
-    default_scene->addMesh(std::move(pyramid), "pyramid", glm::mat4(1.0f));
     default_scene->addMesh(std::move(cube), "cube", glm::mat4(1.0f));
     gui.main_state.isFaceSelectionActive =
         true; // sets the initial state of the face selection button to active

@@ -24,12 +24,10 @@ glm::vec3 generateRandomColor() {
   return {dis(gen) / 255.0f, dis(gen) / 255.0f, dis(gen) / 255.0f};
 }
 
-// default scene has 3 objects, 2 pyramind and 1 cube
 
 // given the scene to render, the window will render all objects
 // mainWindow always initializes with a default window named "default"
 void MainWindow::use(std::string *scene_name) {
-
   std::string default_scene_name = "default";
   if (scene_name == nullptr)
     scene_name = &default_scene_name;
@@ -40,7 +38,7 @@ void MainWindow::use(std::string *scene_name) {
   if (isWindowReady(&error)) {
     while (!glfwWindowShouldClose(window)) {
       element_editing->setViewProjectionMatrix(renderer->getCurrentScene()->getViewProjectionMatrix());
-      element_editing->setCurrentSelectedElement(VERTEX,1,0);
+      element_editing->setCurrentSelectedElement(VERTEX,0,4);
       element_editing->vertexRayCaster(getMouseNDC(window),camera.getCameraPosition(),camera.getCameraFront());
 
       float time = glfwGetTime();
@@ -218,11 +216,15 @@ bool MainWindow::isWindowReady(std::string *out_error) const {
 
   return true;
 }
+
+//gives the mouse x,y position on the screen in NDC
 glm::vec2 MainWindow::getMouseNDC(GLFWwindow* window) {
   double x, y;
   int w, h;
   glfwGetCursorPos(window, &x, &y);
   glfwGetWindowSize(window, &w, &h);
+
+  //normalizes the coordinates into (-1,1) space
   return {
     (float)(x / w) * 2.0f - 1.0f,
     (float)((h - y) / h) * 2.0f - 1.0f  // flip y
