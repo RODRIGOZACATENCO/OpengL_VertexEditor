@@ -22,8 +22,9 @@ void ElementEditingRenderer::processDrawCall(Render_type type_of_render) {
     break;
 
   case element_detection_pass:
-    current_scene->resetVertexAlreadyRendered();
     elementDetectionPass();
+    current_scene->resetVertexAlreadyRendered();
+
     break;
   }
 }
@@ -35,64 +36,67 @@ void ElementEditingRenderer::elementDetectionPass() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
   glFrontFace(GL_CCW);
+  glDepthFunc(GL_LESS);
   glEnable(GL_PROGRAM_POINT_SIZE); // enable setting point size in the shader
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   unsigned int mesh_id = 0;
 
   switch (current_rendering_mode) {
-  case FACE_EDITING:
-    shaders[face_detection]->use();
-    for (const auto &mesh_ptr : current_scene->getMeshes()) {
-      Mesh *mesh = mesh_ptr.get();
-      RenderInfo ri = current_scene->getRenderInfoFromMesh(mesh);
-      shaders[face_detection]->setMat4("model", ri.model);
-      shaders[face_detection]->setUint("MeshID", mesh_id++);
-      glBindVertexArray(ri.vertex_VAO);
-      glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(),
-                     GL_UNSIGNED_INT, 0);
-      glBindVertexArray(0);
-    }
-    break;
+    case FACE_EDITING:
+      shaders[face_detection]->use();
+      for (const auto &mesh_ptr : current_scene->getMeshes()) {
+        Mesh *mesh = mesh_ptr.get();
+        RenderInfo ri = current_scene->getRenderInfoFromMesh(mesh);
+        shaders[face_detection]->setMat4("model", ri.model);
+        shaders[face_detection]->setUint("MeshID", mesh_id++);
+        glBindVertexArray(ri.vertex_VAO);
+        glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(),
+                       GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+      }
+      break;
 
-  case VERTEX_EDITING: {
-    shaders[vertex_detection]->use();
-    unsigned int vertex_offset = 0;
-    for (const auto &mesh_ptr : current_scene->getMeshes()) {
-      Mesh *mesh = mesh_ptr.get();
-      RenderInfo ri = current_scene->getRenderInfoFromMesh(mesh);
-      shaders[vertex_detection]->setMat4("model", ri.model);
-      shaders[vertex_detection]->setMat4("projection",
-                                         current_scene->getProjectionMatrix());
-      shaders[vertex_detection]->setMat3(
-          "normal_matrix", current_scene->getNormalMatrixFromModel(ri.model));
-      shaders[vertex_detection]->setUint("MeshID", mesh_id++);
-      shaders[vertex_detection]->setUint("vertex_offset", vertex_offset);
-      vertex_offset += mesh->getVertices().size();
-      glBindVertexArray(ri.vertex_VAO);
-      glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(),
-                     GL_UNSIGNED_INT, 0);
-      glBindVertexArray(0);
-    }
-  } break;
-  case EDGE_EDITING:
-    auto &shader = shaders[edge_detection];
-    shader->use();
-    unsigned int edge_faces_normal_offset = 0;
-    for (const auto &mesh_ptr : current_scene->getMeshes()) {
-      Mesh *mesh = mesh_ptr.get();
-      RenderInfo ri = current_scene->getRenderInfoFromMesh(mesh);
-      shader->setMat4("model", ri.model);
-      shader->setMat3("normal_matrix",
-                      current_scene->getNormalMatrixFromModel(ri.model));
-      shader->setUint("edge_faces_normal_offset", edge_faces_normal_offset);
-      shader->setUint("MeshID", mesh_id++);
-      edge_faces_normal_offset += mesh->getEdges().size();
-      glBindVertexArray(ri.edge_VAO);
-      glDrawElements(GL_LINES, mesh->getEdgeRenderIndices().size(),
-                     GL_UNSIGNED_INT, 0);
-      glBindVertexArray(0);
-    }
-    break;
+    case VERTEX_EDITING: {
+      shaders[vertex_detection]->use();
+      unsigned int vertex_offset = 0;
+      for (const auto &mesh_ptr : current_scene->getMeshes()) {
+        Mesh *mesh = mesh_ptr.get();
+        RenderInfo ri = current_scene->getRenderInfoFromMesh(mesh);
+        shaders[vertex_detection]->setMat4("model", ri.model);
+        shaders[vertex_detection]->setMat4("projection",
+                                           current_scene->getProjectionMatrix());
+        shaders[vertex_detection]->setMat4("view_matrix",current_scene->getViewMatrix());
+        shaders[vertex_detection]->setMat3(
+            "normal_matrix", current_scene->getNormalMatrixFromModel(ri.model));
+        shaders[vertex_detection]->setUint("MeshID", mesh_id++);
+        shaders[vertex_detection]->setUint("vertex_offset", vertex_offset);
+        vertex_offset += mesh->getVertices().size();
+        glBindVertexArray(ri.vertex_VAO);
+        glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(),
+                       GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+      }
+    } break;
+    case EDGE_EDITING:
+      auto &shader = shaders[edge_detection];
+      shader->use();
+      unsigned int edge_faces_normal_offset = 0;
+      for (const auto &mesh_ptr : current_scene->getMeshes()) {
+        Mesh *mesh = mesh_ptr.get();
+        RenderInfo ri = current_scene->getRenderInfoFromMesh(mesh);
+        shader->setMat4("model", ri.model);
+        shader->setMat3("normal_matrix",
+                        current_scene->getNormalMatrixFromModel(ri.model));
+        shader->setMat4("view_matrix",current_scene->getViewMatrix());
+        shader->setUint("edge_faces_normal_offset", edge_faces_normal_offset);
+        shader->setUint("MeshID", mesh_id++);
+        edge_faces_normal_offset += mesh->getEdges().size();
+        glBindVertexArray(ri.edge_VAO);
+        glDrawElements(GL_LINES, mesh->getEdgeRenderIndices().size(),
+                       GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+      }
+      break;
   }
 }
 
@@ -168,33 +172,53 @@ void ElementEditingRenderer::mainRenderPass() {
 
 void ElementEditingRenderer::FramebufferSetup() {
   glfwGetFramebufferSize(window, &width, &height);
-  // it will create the frame buffer
+
   glGenFramebuffers(1, &element_detection_framebuffer_info.FBO);
-  glGenTextures(1, &element_detection_framebuffer_info.texture);
-  glGenRenderbuffers(1, &element_detection_framebuffer_info.DBO);
+  glGenTextures(1,&element_detection_framebuffer_info.color_texture);// normal color texture
+  glGenTextures(1, &element_detection_framebuffer_info.texture);//ID color texture
+  glGenTextures(1, &element_detection_framebuffer_info.depth_texture);
+
   glBindFramebuffer(GL_FRAMEBUFFER, element_detection_framebuffer_info.FBO);
+
+  //ID attachment (ID picking texture)
   glBindTexture(GL_TEXTURE_2D, element_detection_framebuffer_info.texture);
-  // it's a texture that will cover the entire viewport
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32UI, width, height, 0, GL_RGB_INTEGER,
                GL_UNSIGNED_INT, nullptr);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  // binds the texture to the framebuffer
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                         element_detection_framebuffer_info.texture, 0);
-  GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
-  glDrawBuffers(1, drawBuffers);
-  glReadBuffer(GL_COLOR_ATTACHMENT0);
+                          element_detection_framebuffer_info.texture, 0);
+
+  //color attachment
+  glBindTexture(GL_TEXTURE_2D, element_detection_framebuffer_info.color_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0,GL_RGBA,
+               GL_UNSIGNED_BYTE, nullptr);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D,
+                              element_detection_framebuffer_info.color_texture, 0);
+
+  // depth attachment
+  glBindTexture(GL_TEXTURE_2D, element_detection_framebuffer_info.depth_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0,
+               GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                          element_detection_framebuffer_info.depth_texture, 0);
+
+  GLenum drawBuffers[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+  glDrawBuffers(2, drawBuffers);
+
   glBindTexture(GL_TEXTURE_2D, 0);
-  glBindRenderbuffer(GL_RENDERBUFFER, element_detection_framebuffer_info.DBO);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                            GL_RENDERBUFFER,
-                            element_detection_framebuffer_info.DBO);
+
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-    std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!"
-              << std::endl;
+    std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
   }
+
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 void ElementEditingRenderer::setViewProjectionMatrices() {
 

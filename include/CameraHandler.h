@@ -11,7 +11,7 @@
 class CameraHandler {
   private:
   float pi = std::numbers::pi_v<float>;
-	CameraMode current_camera_mode;
+	CameraMode current_camera_mode=GIMBALL;
   float delta_time;
 	float CAMERA_SPEED = pi;//radians per second
   float MIN_ZOOM_RADIUS=3.0f;

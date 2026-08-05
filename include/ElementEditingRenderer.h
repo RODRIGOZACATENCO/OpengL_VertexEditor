@@ -19,6 +19,8 @@ struct FramebufferInfo {
   unsigned int FBO;
   unsigned int texture;
   unsigned int DBO;
+  unsigned int depth_texture;
+  unsigned int color_texture;
 };
 
 enum Render_type { main_render_pass, element_detection_pass };

@@ -10,7 +10,7 @@ layout(std430,binding = 2) buffer NormalFacesAdjacent{
     EdgeNormals face_normals[];
 };
 uniform mat3 normal_matrix;
-
+uniform mat4 view_matrix;
 
 /*offset needed to read each mesh 
 face normals from buffer*/
@@ -26,9 +26,9 @@ flat out uint edgeID;
 void main(){
     //transform and check face normals
     EdgeNormals en=face_normals[edge_faces_normal_offset+gl_PrimitiveIDIn];
-    vec3 face_normal_1=normal_matrix*vec3(en.face_normal_1);
-    vec3 face_normal_2=normal_matrix*vec3(en.face_normal_2);
-    if(face_normal_1.z >0.0 || face_normal_2.z>0.0){//if any face front facing
+    vec3 face_normal_1=mat3(view_matrix)*normal_matrix*vec3(en.face_normal_1);
+    vec3 face_normal_2=mat3(view_matrix)*normal_matrix*vec3(en.face_normal_2);
+    if((face_normal_1.z >0.0 || face_normal_2.z>0.0) && gl_in[0].gl_Position.w > 0.0001 && gl_in[1].gl_Position.w > 0.0001){//if any of the 2 faces that touch that edge is front facing
         edgeID=gl_PrimitiveIDIn;
         //coordinates are in clip space(4d), they need to be in 2d space NDC 
         vec4 vertex1 = gl_in[0].gl_Position;

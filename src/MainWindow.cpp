@@ -38,8 +38,8 @@ void MainWindow::use(std::string *scene_name) {
   if (isWindowReady(&error)) {
     while (!glfwWindowShouldClose(window)) {
       element_editing->setViewProjectionMatrix(renderer->getCurrentScene()->getViewProjectionMatrix());
-      element_editing->setCurrentSelectedElement(VERTEX,0,4);
-      element_editing->vertexRayCaster(getMouseNDC(window),camera.getCameraPosition(),camera.getCameraFront());
+      // element_editing->setCurrentSelectedElement(VERTEX,0,4);
+      // element_editing->vertexRayCaster(getMouseNDC(window),camera.getCameraPosition(),camera.getCameraFront());
 
       float time = glfwGetTime();
       delta_time = time - last_frame;
