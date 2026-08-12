@@ -1,6 +1,3 @@
-//
-// Created by rodrigo on 04/05/2026.
-//
 
 #include "../include/ElementEditingRenderer.h"
 #include "GUI.h"
@@ -29,14 +26,40 @@ void ElementEditingRenderer::processDrawCall(Render_type type_of_render) {
   }
 }
 
-void ElementEditingRenderer::elementDetectionPass() {
-
-  glBindFramebuffer(GL_FRAMEBUFFER, element_detection_framebuffer_info.FBO);
+void ElementEditingRenderer::vertexDetectionPass(){
+  unsigned int mesh_id = 0;
+  glBindFramebuffer(GL_FRAMEBUFFER, frame_buffers[ELEMENT_DETECTION_BUFFER].FBO);
   glClearColor(0.0, 0.0, 0.0, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
   glFrontFace(GL_CCW);
-  glDepthFunc(GL_LESS);
+  shaders[vertex_detection]->use();
+  unsigned int vertex_offset = 0;
+  for (const auto &mesh_ptr : current_scene->getMeshes()) {
+    Mesh *mesh = mesh_ptr.get();
+    RenderInfo ri = current_scene->getRenderInfoFromMesh(mesh);
+    shaders[vertex_detection]->setMat4("model", ri.model);
+    shaders[vertex_detection]->setMat4("projection",
+                                       current_scene->getProjectionMatrix());
+    shaders[vertex_detection]->setMat4("view_matrix",current_scene->getViewMatrix());
+    shaders[vertex_detection]->setMat3(
+        "normal_matrix", current_scene->getNormalMatrixFromModel(ri.model));
+    shaders[vertex_detection]->setUint("MeshID", mesh_id++);
+    shaders[vertex_detection]->setUint("vertex_offset", vertex_offset);
+    vertex_offset += mesh->getVertices().size();
+    glBindVertexArray(ri.vertex_VAO);
+    glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(),
+                   GL_UNSIGNED_INT, 0);
+  }
+    glBindVertexArray(0);
+}
+void ElementEditingRenderer::elementDetectionPass() {
+
+  glBindFramebuffer(GL_FRAMEBUFFER, frame_buffers[ELEMENT_DETECTION_BUFFER].FBO);
+  glClearColor(0.0, 0.0, 0.0, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glEnable(GL_DEPTH_TEST);
+  glFrontFace(GL_CCW);
   glEnable(GL_PROGRAM_POINT_SIZE); // enable setting point size in the shader
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   unsigned int mesh_id = 0;
@@ -107,7 +130,7 @@ void ElementEditingRenderer::mainRenderPass() {
     std::cout << error << std::endl;
     return;
   }
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glBindFramebuffer(GL_FRAMEBUFFER, frame_buffers[MAIN_COLOR_BUFFER].FBO);
   glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
@@ -168,38 +191,71 @@ void ElementEditingRenderer::mainRenderPass() {
     }
     glDisable(GL_POLYGON_OFFSET_FILL);
   }
+
+
+  glBindFramebuffer(GL_FRAMEBUFFER,0);
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT);
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_CULL_FACE);
+
+
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D,frame_buffers[MAIN_COLOR_BUFFER].texture);
+  shaders[render_window]->use();
+  shaders[render_window]->setSampler2d("screenTexture",0);
+  glBindVertexArray(main_window_VAO);
+  glDrawArrays(GL_TRIANGLES,0,6);
+
+
 }
 
-void ElementEditingRenderer::FramebufferSetup() {
+//needs to follow the order of the enum FrameBuffers
+void ElementEditingRenderer::initializeBuffers() {
+  FramebufferInfo main_color_info,element_detection_info;
+
+  mainColorFrameBufferSetup(&main_color_info);
+  frame_buffers.push_back(main_color_info);
+
+  elementDetectionFramebufferSetup(&element_detection_info);
+  frame_buffers.push_back(element_detection_info);
+
+  glGenVertexArrays(1,&main_window_VAO);
+  glGenBuffers(1,&main_window_VBO);
+
+  glBindBuffer(GL_ARRAY_BUFFER,main_window_VBO);
+  glBufferData(GL_ARRAY_BUFFER,quad_vertices.size()*sizeof(float),quad_vertices.data(),GL_STATIC_DRAW);
+
+  glBindVertexArray(main_window_VAO);
+  glBindBuffer(GL_ARRAY_BUFFER,main_window_VBO);
+  glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,4*sizeof(float),(void*)0);//coordinates
+  glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,4*sizeof(float),(void*)(2*sizeof(float)));//TexCoords
+  glEnableVertexAttribArray(0);
+  glEnableVertexAttribArray(1);
+  glBindVertexArray(0);
+}
+
+void ElementEditingRenderer::elementDetectionFramebufferSetup(
+  FramebufferInfo *element_detection_framebuffer_info) {
   glfwGetFramebufferSize(window, &width, &height);
 
-  glGenFramebuffers(1, &element_detection_framebuffer_info.FBO);
-  glGenTextures(1,&element_detection_framebuffer_info.color_texture);// normal color texture
-  glGenTextures(1, &element_detection_framebuffer_info.texture);//ID color texture
-  glGenTextures(1, &element_detection_framebuffer_info.depth_texture);
+  glGenFramebuffers(1, &element_detection_framebuffer_info->FBO);
+  glGenTextures(1, &element_detection_framebuffer_info->texture);//ID picking texture
+  glGenTextures(1, &element_detection_framebuffer_info->depth_texture);//depth texture
 
-  glBindFramebuffer(GL_FRAMEBUFFER, element_detection_framebuffer_info.FBO);
+  glBindFramebuffer(GL_FRAMEBUFFER, element_detection_framebuffer_info->FBO);
 
   //ID attachment (ID picking texture)
-  glBindTexture(GL_TEXTURE_2D, element_detection_framebuffer_info.texture);
+  glBindTexture(GL_TEXTURE_2D, element_detection_framebuffer_info->texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32UI, width, height, 0, GL_RGB_INTEGER,
                GL_UNSIGNED_INT, nullptr);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                          element_detection_framebuffer_info.texture, 0);
-
-  //color attachment
-  glBindTexture(GL_TEXTURE_2D, element_detection_framebuffer_info.color_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0,GL_RGBA,
-               GL_UNSIGNED_BYTE, nullptr);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D,
-                              element_detection_framebuffer_info.color_texture, 0);
+                          element_detection_framebuffer_info->texture, 0);
 
   // depth attachment
-  glBindTexture(GL_TEXTURE_2D, element_detection_framebuffer_info.depth_texture);
+  glBindTexture(GL_TEXTURE_2D, element_detection_framebuffer_info->depth_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0,
                GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -207,10 +263,10 @@ void ElementEditingRenderer::FramebufferSetup() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
-                          element_detection_framebuffer_info.depth_texture, 0);
+                          element_detection_framebuffer_info->depth_texture, 0);
 
-  GLenum drawBuffers[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-  glDrawBuffers(2, drawBuffers);
+  GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+  glDrawBuffers(1, drawBuffers);
 
   glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -218,6 +274,46 @@ void ElementEditingRenderer::FramebufferSetup() {
     std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
   }
 
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void ElementEditingRenderer::mainColorFrameBufferSetup(FramebufferInfo *main_color_framebuffer_info) {
+
+  glfwGetFramebufferSize(window, &width, &height);
+  glGenFramebuffers(1, &main_color_framebuffer_info->FBO);
+  glGenTextures(1,&main_color_framebuffer_info->texture);// normal color texture
+  glGenTextures(1, &main_color_framebuffer_info->depth_texture);//depth texture
+
+  glBindFramebuffer(GL_FRAMEBUFFER, main_color_framebuffer_info->FBO);
+
+  //color attachment
+  glBindTexture(GL_TEXTURE_2D, main_color_framebuffer_info->texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0,GL_RGBA,
+               GL_UNSIGNED_BYTE, nullptr);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                              main_color_framebuffer_info->texture, 0);
+
+  // depth attachment
+  glBindTexture(GL_TEXTURE_2D, main_color_framebuffer_info->depth_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0,
+               GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                          main_color_framebuffer_info->depth_texture, 0);
+
+  GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+  glDrawBuffers(1, drawBuffers);
+
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+  }
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 void ElementEditingRenderer::setViewProjectionMatrices() {
@@ -237,7 +333,7 @@ void ElementEditingRenderer::setViewProjectionMatrices() {
   }
 }
 
-void ElementEditingRenderer::shaderSetup() {
+void ElementEditingRenderer::initializeShaders() {
   // the paths for the color pass
   std::string root = ROOT_DIR;
   std::string face_color_pass_dir =
@@ -256,6 +352,7 @@ void ElementEditingRenderer::shaderSetup() {
       root + "shaders/mesh_editing/element_detection/edges/";
 
   std::string axis_lines_dir=root+"shaders/mesh_editing/main_window/";
+  std::string render_window_dir=root+"shaders/mesh_editing/main_window/render_window/";
 
   shaders.resize(Shader_names::shader_count); // resize to create elements
 
@@ -288,6 +385,11 @@ void ElementEditingRenderer::shaderSetup() {
   shaders[Shader_names::axis_lines_shader] =
      std::make_unique<Shader>(axis_lines_dir+"gridline.vert",
        axis_lines_dir+"gridline.frag");
+
+  shaders[Shader_names::render_window] =
+    std::make_unique<Shader>(render_window_dir+ "render_window.vert",
+      render_window_dir+ "render_window.frag");
+
   setViewProjectionMatrices();
 }
 
@@ -333,28 +435,29 @@ void ElementEditingRenderer::updateModelMatrices() {
 }
 
 void ElementEditingRenderer::cleanup() {
-  glDeleteFramebuffers(1, &element_detection_framebuffer_info.FBO);
-  glDeleteTextures(1, &element_detection_framebuffer_info.texture);
-  glDeleteRenderbuffers(1, &element_detection_framebuffer_info.DBO);
+  for (FramebufferInfo info:frame_buffers) {
+    glDeleteFramebuffers(1, &info.FBO);
+    glDeleteTextures(1, &info.texture);
+    glDeleteTextures(1, &info.depth_texture);
+  }
 }
 
+//TODO FIX PLS PLS PLS
 void ElementEditingRenderer::resizeFramebuffer() {
   glfwGetFramebufferSize(window, &width, &height);
-  glBindTexture(GL_TEXTURE_2D, element_detection_framebuffer_info.texture);
+  glBindTexture(GL_TEXTURE_2D, frame_buffers[MAIN_COLOR_BUFFER].texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32UI, width, height, 0, GL_RGB_INTEGER,
                GL_UNSIGNED_INT, nullptr);
   glBindTexture(GL_TEXTURE_2D, 0); // Unbind when done
 
   // 2. Bind and resize the depth renderbuffer attachment
-  glBindRenderbuffer(GL_RENDERBUFFER, element_detection_framebuffer_info.DBO);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
-  glBindRenderbuffer(GL_RENDERBUFFER, 0); // Unbind when done
 }
 
 std::optional<std::tuple<unsigned int, unsigned int, unsigned int>>
 ElementEditingRenderer::meshElementDetection() {
+
   auto [framebuffer_x, framebuffer_y] = getCursorPositionInViewport(window);
-  glBindFramebuffer(GL_FRAMEBUFFER, element_detection_framebuffer_info.FBO);
+  glBindFramebuffer(GL_FRAMEBUFFER, frame_buffers[ELEMENT_DETECTION_BUFFER].FBO);
   glReadBuffer(GL_COLOR_ATTACHMENT0);
   unsigned int pixel_data[3];
   glReadPixels(framebuffer_x, framebuffer_y, 1, 1, GL_RGB_INTEGER,
@@ -399,8 +502,6 @@ bool ElementEditingRenderer::rendererIsReady(std::string *out_error) const {
     return fail("Shaders array is not fully populated.");
   if (width <= 0 || height <= 0)
     return fail("Invalid screen dimensions.");
-  if (element_detection_framebuffer_info.FBO == 0)
-    return fail("Framebuffer not set up.");
 
   return true;
 }
@@ -436,6 +537,7 @@ void ElementEditingRenderer::setupAxisLines() {
   glBindVertexArray(0);
   glBindBuffer(GL_ARRAY_BUFFER,0);
 }
+
 void ElementEditingRenderer::renderAxisLines() {
   shaders[axis_lines_shader]->use();
   glBindVertexArray(axis_lines_VAO);
