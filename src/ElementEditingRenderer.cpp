@@ -17,41 +17,12 @@ void ElementEditingRenderer::processDrawCall(Render_type type_of_render) {
   case main_render_pass:
     mainRenderPass();
     break;
-
   case element_detection_pass:
+    mainRenderPass();
     elementDetectionPass();
     current_scene->resetVertexAlreadyRendered();
-
     break;
   }
-}
-
-void ElementEditingRenderer::vertexDetectionPass(){
-  unsigned int mesh_id = 0;
-  glBindFramebuffer(GL_FRAMEBUFFER, frame_buffers[ELEMENT_DETECTION_BUFFER].FBO);
-  glClearColor(0.0, 0.0, 0.0, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glEnable(GL_DEPTH_TEST);
-  glFrontFace(GL_CCW);
-  shaders[vertex_detection]->use();
-  unsigned int vertex_offset = 0;
-  for (const auto &mesh_ptr : current_scene->getMeshes()) {
-    Mesh *mesh = mesh_ptr.get();
-    RenderInfo ri = current_scene->getRenderInfoFromMesh(mesh);
-    shaders[vertex_detection]->setMat4("model", ri.model);
-    shaders[vertex_detection]->setMat4("projection",
-                                       current_scene->getProjectionMatrix());
-    shaders[vertex_detection]->setMat4("view_matrix",current_scene->getViewMatrix());
-    shaders[vertex_detection]->setMat3(
-        "normal_matrix", current_scene->getNormalMatrixFromModel(ri.model));
-    shaders[vertex_detection]->setUint("MeshID", mesh_id++);
-    shaders[vertex_detection]->setUint("vertex_offset", vertex_offset);
-    vertex_offset += mesh->getVertices().size();
-    glBindVertexArray(ri.vertex_VAO);
-    glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(),
-                   GL_UNSIGNED_INT, 0);
-  }
-    glBindVertexArray(0);
 }
 void ElementEditingRenderer::elementDetectionPass() {
 
@@ -60,6 +31,7 @@ void ElementEditingRenderer::elementDetectionPass() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
   glFrontFace(GL_CCW);
+  glEnable(GL_CULL_FACE);
   glEnable(GL_PROGRAM_POINT_SIZE); // enable setting point size in the shader
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   unsigned int mesh_id = 0;
@@ -93,7 +65,14 @@ void ElementEditingRenderer::elementDetectionPass() {
             "normal_matrix", current_scene->getNormalMatrixFromModel(ri.model));
         shaders[vertex_detection]->setUint("MeshID", mesh_id++);
         shaders[vertex_detection]->setUint("vertex_offset", vertex_offset);
+
+
+
         vertex_offset += mesh->getVertices().size();
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D,frame_buffers[MAIN_COLOR_BUFFER].depth_texture);
+        shaders[vertex_detection]->setSampler2d("main_depth_texture",0);
         glBindVertexArray(ri.vertex_VAO);
         glDrawElements(GL_TRIANGLES, mesh->getFaceRenderIndices().size(),
                        GL_UNSIGNED_INT, 0);
@@ -114,6 +93,7 @@ void ElementEditingRenderer::elementDetectionPass() {
         shader->setUint("edge_faces_normal_offset", edge_faces_normal_offset);
         shader->setUint("MeshID", mesh_id++);
         edge_faces_normal_offset += mesh->getEdges().size();
+
         glBindVertexArray(ri.edge_VAO);
         glDrawElements(GL_LINES, mesh->getEdgeRenderIndices().size(),
                        GL_UNSIGNED_INT, 0);
