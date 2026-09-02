@@ -7,7 +7,6 @@
 
 #include "CameraHandler.h"
 #include <GLFW/glfw3.h>
-#include <glad/glad.h>
 #include <map>
 #include <memory>
 #include <optional>
@@ -16,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include "ElementEditing.h"
 #include "ElementEditingRenderer.h"
 #include "GUI.h"
 #include "Mesh.h"
@@ -73,6 +73,7 @@ private:
   GLFWwindow *window;
   GUI gui;
   std::unique_ptr<ElementEditingRenderer> renderer;
+  std::unique_ptr<ElementEditing> element_editing;
   std::map<std::string, std::unique_ptr<Scene>> scene_name_to_scene_object;
   bool has_scene_changed = false;
   float delta_time = 0.0f;
@@ -82,9 +83,7 @@ private:
 public:
   MainWindow(GLFWwindow *window) : window(window), width(0), height(0) {
     glfwGetFramebufferSize(window, &width, &height);
-    auto pyramid = std::make_unique<Mesh>(&piramid_vertices, &piramid_faces);
     auto cube = std::make_unique<Mesh>(&cube_vertices, &faces);
-
     glm::mat4 projection = glm::perspective(
         glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 
@@ -92,7 +91,6 @@ public:
         std::make_unique<Scene>(camera.getCurrentViewMatrix(),
                                 projection); // initialize the default scene
 
-    default_scene->addMesh(std::move(pyramid), "pyramid", glm::mat4(1.0f));
     default_scene->addMesh(std::move(cube), "cube", glm::mat4(1.0f));
     gui.main_state.isFaceSelectionActive =
         true; // sets the initial state of the face selection button to active
@@ -110,6 +108,8 @@ public:
     glfwSetMouseButtonCallback(window, mainWindowMouseCallback);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     glfwSetScrollCallback(window, mainWindowScrollCallback);
+    element_editing= std::make_unique<ElementEditing>(default_scene.get());
+
   }
 
   // Getters and Setters
@@ -154,5 +154,7 @@ public:
   void addScene(std::string name, std::unique_ptr<Scene> scene) {
     scene_name_to_scene_object[name] = std::move(scene);
   }
+  glm::vec2 getMouseNDC(GLFWwindow* window);
   void processInput();
+
 };

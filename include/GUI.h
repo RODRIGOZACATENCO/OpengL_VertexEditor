@@ -6,8 +6,6 @@
 
 #include "CameraHandler.h"
 
-enum GUIState { FACE_EDITING = 1, VERTEX_EDITING = 2, EDGE_EDITING = 3 };
-
 struct MainGUI_state {
   bool isFaceSelectionActive = false;
   bool isVertexSelectionActive = false;

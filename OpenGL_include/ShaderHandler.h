@@ -229,4 +229,7 @@ public:
     glUniformMatrix3fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE,
                        glm::value_ptr(matrix));
   }
+  void setSampler2d(const std::string &name, const unsigned int &texture2d) const {
+    glUniform1i(glGetUniformLocation(ID, name.c_str()), texture2d);
+  }
 };

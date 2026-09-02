@@ -3,6 +3,7 @@
 //
 
 #pragma once
+
 #include <glm/glm.hpp>
 #include <map>
 #include <tuple>
@@ -39,14 +40,14 @@ public:
     setupFaceRenderIndices();
     setupEdgeRenderIndices();
     computeFaceNormalVectors();
-    computevertexNormalVectors();
+    computeVertexNormalVectors();
   }
 
   void process_mesh(std::vector<float> *vertices, std::vector<int> *faces);
   void show_mesh_structure();
   void setupFaceRenderIndices();
   void setupEdgeRenderIndices();
-  void computevertexNormalVectors();
+  void computeVertexNormalVectors();
   void computeFaceNormalVectors();
 
   // given an edge, will return the face indices of the faces the edge touches
@@ -66,9 +67,10 @@ public:
   const std::map<std::pair<int, int>, int> &getEdgeLookup() const{
     return  edge_lookup;
   }
-  HalfEdge &halfedgeFromIndex(unsigned int index) { return half_edges[index]; }
-  Vertex &vertexFromIndex(unsigned int index) { return vertices[index]; }
-  Edge &edgeFromIndex(unsigned int index) { return edges[index]; }
+  HalfEdge getHalfedgeFromIndex(unsigned int index) { return half_edges[index]; }
+  Vertex &getvVertexFromIndex(unsigned int index) { return vertices[index]; }
+  Edge getEdgeFromIndex(unsigned int index) { return edges[index]; }
+
 
   std::tuple<unsigned int, unsigned int, unsigned int>
   vertexIndicesFromFace(Face face) {
