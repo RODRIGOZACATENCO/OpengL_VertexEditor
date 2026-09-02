@@ -27,13 +27,13 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 add_library(VertexEditorCore STATIC
         ${SOURCES}
         "${SHARED_INCLUDE_DIR}/glad/src/glad.c"
-        ${SHARED_INCLUDE_DIR}/imgui/imgui_demo.cpp
         ${SHARED_INCLUDE_DIR}/imgui/imgui.cpp
         ${SHARED_INCLUDE_DIR}/imgui/imgui_draw.cpp
         ${SHARED_INCLUDE_DIR}/imgui/imgui_tables.cpp
         ${SHARED_INCLUDE_DIR}/imgui/imgui_widgets.cpp
         ${SHARED_INCLUDE_DIR}/imgui/backends/imgui_impl_glfw.cpp
         ${SHARED_INCLUDE_DIR}/imgui/backends/imgui_impl_opengl3.cpp
+        OpenGL_include/JsonParser.h
 )
 
 target_include_directories(VertexEditorCore PUBLIC
@@ -59,6 +59,6 @@ target_compile_definitions(VertexEditorCore PUBLIC
 )
 
 # --- Main Executable ---
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} main.cpp
+        OpenGL_include/JsonParser.h)
 target_link_libraries(${PROJECT_NAME} PRIVATE VertexEditorCore)
-
