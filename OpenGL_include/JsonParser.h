@@ -45,7 +45,7 @@ public:
 
   }
   struct JsonPrinter {
-    std::ostream& os; // We store the stream here so we can print to it!
+    std::ostream& os; // We store the stream here so we can print
 
     void operator()(const Number n) const {
       os << std::setprecision(std::numeric_limits<double>::max_digits10) << n;
@@ -81,6 +81,7 @@ public:
     }
 
   };
+
   friend std::ostream& operator<<(std::ostream& os,const  JsonValue& json_value) {
     std::visit(JsonPrinter{os},json_value.value);
     return os;

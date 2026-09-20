@@ -6,8 +6,11 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-
+#include "ObjHandler.h"
 int main() {
+  ObjHandler handler;
+  handler.getObjectInfo("cube.obj");
+  int a=0;
   // GLFW Init
   if (!glfwInit())
     return -1;

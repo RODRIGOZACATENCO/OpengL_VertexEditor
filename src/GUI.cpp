@@ -2,7 +2,7 @@
 // Created by rodrigo on 29/04/2026.
 //
 #include "glad/glad.h"
-#include "../include/GUI.h"
+#include "../headers/GUI.h"
 
 
 #include <imgui.h>

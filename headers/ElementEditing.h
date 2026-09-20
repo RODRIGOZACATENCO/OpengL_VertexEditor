@@ -4,7 +4,6 @@
 #include <iostream>
 
 #include <tuple>
-#include "../include/Scene.h"
 #include "CommonTypes.h"
 
 class Scene;

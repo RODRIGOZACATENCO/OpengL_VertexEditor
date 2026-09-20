@@ -4,7 +4,7 @@
 
 #include <glad/glad.h>
 
-#include "../include/Scene.h"
+#include "../headers/Scene.h"
 #include <glm/ext/vector_float3.hpp>
 #include <glm/matrix.hpp>
 #include <vector>
@@ -305,41 +305,4 @@ void Scene::cleanup() {
     glDeleteBuffers(1, &mesh_to_render_info[mesh_ptr].edge_EBO);
   }
   glDeleteBuffers(1, &selected_elements_SSBO);
-}
-
-bool Scene::sceneIsReady(std::string *out_error) const {
-  auto fail = [&](const std::string &msg) {
-    if (out_error)
-      *out_error = msg;
-    return false;
-  };
-
-  if (meshes.empty())
-    return fail("No meshes in scene.");
-  if (view == glm::mat4(0.0f))
-    return fail("View matrix not set.");
-  if (projection == glm::mat4(0.0f))
-    return fail("Projection matrix not set.");
-  if (selected_elements_SSBO == 0)
-    return fail("Selection SSBO not set up.");
-
-  for (const auto &mesh : meshes) {
-    Mesh *mesh_ptr = mesh.get();
-    if (!mesh_ptr)
-      return fail("Null mesh found in scene.");
-
-    auto it = mesh_to_render_info.find(mesh_ptr);
-    if (it == mesh_to_render_info.end())
-      return fail("Mesh missing render info.");
-
-    const RenderInfo &info = it->second;
-    if (info.vertex_VAO == 0)
-      return fail("Mesh has invalid VAO.");
-    if (info.vertex_VBO == 0)
-      return fail("Mesh has invalid VBO.");
-    if (info.vertex_EBO == 0)
-      return fail("Mesh has invalid EBO.");
-  }
-
-  return true;
 }

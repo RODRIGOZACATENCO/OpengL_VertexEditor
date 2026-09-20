@@ -73,8 +73,6 @@ Into a single vector ,index offset needed per mesh
 
 
 public:
-  bool sceneIsReady(std::string *out_error = nullptr) const;
-
   Scene(glm::mat4 view, glm::mat4 projection)
       : view(view), projection(projection) {
     view_projection_matrix = projection * view;

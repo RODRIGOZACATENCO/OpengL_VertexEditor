@@ -4,9 +4,7 @@
 
 #include <glad/glad.h>
 
-#include "../include/ElementEditingRenderer.h"
-#include "../include/MainWindow.h"
-#include "CameraHandler.h"
+#include "../headers/MainWindow.h"
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>
