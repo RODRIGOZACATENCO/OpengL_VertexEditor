@@ -79,5 +79,6 @@ The binary will be placed in the `build/` directory.
 
 ## Notes
 
-- `FETCH_DEPENDENCIES` only needs to be set once. After the first build, ImGui is cached in `_deps/` and will not be re-downloaded unless you wipe the build folder.
+- `FETCH_DEPENDENCIES` only needs to be set once. After the first build, ImGui is cached in `_deps/` and will not be
+  re-downloaded unless you wipe the build folder.
 - If you reset or delete the build directory, make sure the flag is still set in your CMake options before rebuilding.

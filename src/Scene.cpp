@@ -5,44 +5,33 @@
 #include <glad/glad.h>
 
 #include "../headers/Scene.h"
-#include <glm/ext/vector_float3.hpp>
 #include <glm/matrix.hpp>
 #include <vector>
 
 
-
-void Scene::updateElementSelected(ElementType element_type,unsigned int mesh_id,unsigned int element_id){
+void Scene::updateElementSelected(ElementType element_type, unsigned int mesh_id, unsigned int element_id) {
   unsigned int global_id = 0;
-  switch (element_type)
-  {
+  switch (element_type) {
   case VERTEX:
-    for (int i = 0; i < mesh_id; i++) {
-      global_id += meshes[i]->getVertices().size();
-    }
-    // change the state of the vertex in the global array
+    for (int i = 0; i < mesh_id; i++) { global_id += meshes[i]->getVertices().size(); }
+  // change the state of the vertex in the global array
     vertex_selection_array[global_id + element_id] =
-        !vertex_selection_array[global_id + element_id];
+      !vertex_selection_array[global_id + element_id];
     updateSelectionBuffer(VERTEX_EDITING);
     break;
   case FACE:
-    for (int i = 0; i < mesh_id; i++)
-    {
-      global_id += meshes[i]->getFaces().size();
-    }
-      face_selection_array[global_id + element_id] =!face_selection_array[global_id + element_id];
-      updateSelectionBuffer(FACE_EDITING);
+    for (int i = 0; i < mesh_id; i++) { global_id += meshes[i]->getFaces().size(); }
+    face_selection_array[global_id + element_id] = !face_selection_array[global_id + element_id];
+    updateSelectionBuffer(FACE_EDITING);
     break;
   case EDGE:
-    for (int i = 0; i < mesh_id; i++) {
-      global_id += meshes[i]->getEdges().size();
-    }
+    for (int i = 0; i < mesh_id; i++) { global_id += meshes[i]->getEdges().size(); }
 
-    // change the state of the edge in the global array
+  // change the state of the edge in the global array
     edge_selection_array[global_id + element_id] =
-        !edge_selection_array[global_id + element_id];
+      !edge_selection_array[global_id + element_id];
     updateSelectionBuffer(EDGE_EDITING);
     break;
-
   }
 }
 
@@ -76,32 +65,30 @@ void Scene::resetSelectionBuffer(GUIState type) {
 }
 
 
-void Scene::meshArraysSetup(Mesh *mesh) {
+void Scene::meshArraysSetup(Mesh* mesh) {
   // adds zeros to the end for each of these values of the mesh
   for (int i = 0; i < mesh->getVertices().size(); i++) {
     vertex_selection_array.push_back(0);
 
     vertex_already_rendered_array.push_back(0);
   }
+  for (int i = 0; i < mesh->getEdges().size(); i++) { edge_selection_array.push_back(0); }
+  for (auto face : mesh->getFaces()) { face_selection_array.push_back(0); }
   for (int i = 0; i < mesh->getEdges().size(); i++) {
-    edge_selection_array.push_back(0);
-  }
-  for (auto face : mesh->getFaces()) {
-    face_selection_array.push_back(0);
-  }
-  for(int i = 0; i < mesh->getEdges().size(); i++) {
     auto [face_index_1, face_index_2] = mesh->getFaceIndicesAssociatedWithEdge(i);
     EdgeNormal edgenormal;
     edgenormal.face_normal_1 = glm::vec4(mesh->getFaces()[face_index_1].normal, 0.0f);
-    edgenormal.face_normal_2 = (face_index_2 != -1) ? glm::vec4(mesh->getFaces()[face_index_2].normal, 0.0f) : glm::vec4(0.0f);
+    edgenormal.face_normal_2 = (face_index_2 != -1)
+                                 ? glm::vec4(mesh->getFaces()[face_index_2].normal, 0.0f)
+                                 : glm::vec4(0.0f);
     face_normal_vectors_data.push_back(edgenormal);
   }
 
   // Setup the combined face selection array to color selection on the window
   std::vector<int> combined_selection_array;
   combined_selection_array.reserve(face_selection_array.size() +
-                                   vertex_selection_array.size() +
-                                   edge_selection_array.size());
+    vertex_selection_array.size() +
+    edge_selection_array.size());
   combined_selection_array.insert(combined_selection_array.end(),
                                   face_selection_array.begin(),
                                   face_selection_array.end());
@@ -140,9 +127,9 @@ void Scene::meshArraysSetup(Mesh *mesh) {
 }
 
 /*Setup all the meshes RenderInfo to show on the screen */
-void Scene::meshRenderInfoSetup(Mesh *mesh) {
+void Scene::meshRenderInfoSetup(Mesh* mesh) {
   // generate VAO,VBO,EBO for the mesh
-  RenderInfo *ri = &mesh_to_render_info[mesh];
+  RenderInfo* ri = &mesh_to_render_info[mesh];
   glGenVertexArrays(1, &ri->vertex_VAO);
   glGenVertexArrays(1, &ri->edge_VAO);
   glGenBuffers(1, &ri->vertex_VBO);
@@ -162,8 +149,7 @@ void Scene::meshRenderInfoSetup(Mesh *mesh) {
   }
 
   // setup of VBO for edge detection of each mesh
-  for (int i = 0; i < edges.size(); i++) {
-  }
+  for (int i = 0; i < edges.size(); i++) {}
   // send the vertex data to the GPU
   glBindBuffer(GL_ARRAY_BUFFER, ri->vertex_VBO);
   glBufferData(GL_ARRAY_BUFFER,
@@ -183,19 +169,19 @@ void Scene::meshRenderInfoSetup(Mesh *mesh) {
   glBindBuffer(GL_ARRAY_BUFFER, ri->vertex_VBO);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ri->vertex_EBO);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec3),
-                        (void *)0); // vertex information
+                        (void*)0); // vertex information
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec3),
-                        (void *)(sizeof(glm::vec3))); // normal information
+                        (void*)(sizeof(glm::vec3))); // normal information
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
   glBindVertexArray(0);
 
-  // setup edge VAO 
+  // setup edge VAO
   glBindVertexArray(ri->edge_VAO);
   glBindBuffer(GL_ARRAY_BUFFER, ri->vertex_VBO);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ri->edge_EBO);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec3),
-                        (void *)0);
+                        (void*)0);
 
   glEnableVertexAttribArray(0);
   glBindVertexArray(0);
@@ -209,27 +195,27 @@ void Scene::updateSelectionBuffer(GUIState state) {
     glBufferSubData(GL_SHADER_STORAGE_BUFFER,
                     0, // byte offset where to start
                     face_selection_array.size() * sizeof(int), // size in bytes
-                    face_selection_array.data());              // new data
+                    face_selection_array.data()); // new data
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     break;
   case VERTEX_EDITING:
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, selected_elements_SSBO);
     glBufferSubData(
-        GL_SHADER_STORAGE_BUFFER,
-        face_selection_array.size() * sizeof(int), // byte offset where to start
-        vertex_selection_array.size() * sizeof(int), // size in bytes
-        vertex_selection_array.data());              // new data
+      GL_SHADER_STORAGE_BUFFER,
+      face_selection_array.size() * sizeof(int), // byte offset where to start
+      vertex_selection_array.size() * sizeof(int), // size in bytes
+      vertex_selection_array.data()); // new data
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     break;
   case EDGE_EDITING:
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, selected_elements_SSBO);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER,
                     face_selection_array.size() * sizeof(int) +
-                        vertex_selection_array.size() *
-                            sizeof(int), // byte offset where to start
+                    vertex_selection_array.size() *
+                    sizeof(int), // byte offset where to start
                     edge_selection_array.size() * sizeof(int), // size in bytes
-                    edge_selection_array.data());              // new data
+                    edge_selection_array.data()); // new data
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     break;
   default:
@@ -243,8 +229,8 @@ glm::mat3 Scene::getNormalMatrixFromModel(glm::mat4 model_matrix) {
 
 
 void Scene::updateVertexPos(unsigned int mesh_id, unsigned int vertex_id, glm::vec3 new_pos) {
-  Mesh *mesh_selected=meshes[mesh_id].get();
-  mesh_selected->getvVertexFromIndex(vertex_id).point=new_pos;
+  Mesh* mesh_selected = meshes[mesh_id].get();
+  mesh_selected->getvVertexFromIndex(vertex_id).point = new_pos;
 
   mesh_selected->computeFaceNormalVectors();
   mesh_selected->computeVertexNormalVectors();
@@ -252,26 +238,28 @@ void Scene::updateVertexPos(unsigned int mesh_id, unsigned int vertex_id, glm::v
   computeUpdatedMeshData(mesh_selected);
 
   refreshMeshInformationOnRenderer(mesh_selected);
-
 }
+
 /*updates SSBO's. called when vertex update
  * faces_vertices_data
  * face_normal_vectors_data
  *INNEFICIENT
  */
-void Scene::computeUpdatedMeshData(Mesh *mesh) {
-  RenderInfo *ri=&getRenderInfoFromMesh(mesh);
+void Scene::computeUpdatedMeshData(Mesh* mesh) {
+  RenderInfo* ri = &getRenderInfoFromMesh(mesh);
   ri->faces_vertices_data.clear();
   for (int i = 0; i < mesh->getVertices().size(); i++) {
-    ri->faces_vertices_data.push_back( mesh->getVertices()[i].point);
-    ri->faces_vertices_data.push_back( mesh->getVertices()[i].normal);
+    ri->faces_vertices_data.push_back(mesh->getVertices()[i].point);
+    ri->faces_vertices_data.push_back(mesh->getVertices()[i].normal);
   }
   face_normal_vectors_data.clear();
-  for(int i = 0; i < mesh->getEdges().size(); i++) {
+  for (int i = 0; i < mesh->getEdges().size(); i++) {
     auto [face_index_1, face_index_2] = mesh->getFaceIndicesAssociatedWithEdge(i);
     EdgeNormal edgenormal;
     edgenormal.face_normal_1 = glm::vec4(mesh->getFaces()[face_index_1].normal, 0.0f);
-    edgenormal.face_normal_2 = (face_index_2 != -1) ? glm::vec4(mesh->getFaces()[face_index_2].normal, 0.0f) : glm::vec4(0.0f);
+    edgenormal.face_normal_2 = (face_index_2 != -1)
+                                 ? glm::vec4(mesh->getFaces()[face_index_2].normal, 0.0f)
+                                 : glm::vec4(0.0f);
     face_normal_vectors_data.push_back(edgenormal);
   }
 }
@@ -281,23 +269,23 @@ void Scene::computeUpdatedMeshData(Mesh *mesh) {
   * face_normal_vectors_SSBO
   * vertex_VBO
  */
-void Scene::refreshMeshInformationOnRenderer(Mesh *mesh) {
-  RenderInfo *ri=&getRenderInfoFromMesh(mesh);
-  glBindBuffer(GL_ARRAY_BUFFER,ri->vertex_VBO);
+void Scene::refreshMeshInformationOnRenderer(Mesh* mesh) {
+  RenderInfo* ri = &getRenderInfoFromMesh(mesh);
+  glBindBuffer(GL_ARRAY_BUFFER, ri->vertex_VBO);
   glBufferData(GL_ARRAY_BUFFER,
-                 ri->faces_vertices_data.size() * sizeof(glm::vec3),
-                 ri->faces_vertices_data.data(), GL_STATIC_DRAW);
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER,face_normal_vectors_SSBO);
+               ri->faces_vertices_data.size() * sizeof(glm::vec3),
+               ri->faces_vertices_data.data(), GL_STATIC_DRAW);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, face_normal_vectors_SSBO);
   glBufferData(GL_SHADER_STORAGE_BUFFER,
-                 face_normal_vectors_data.size() * sizeof(EdgeNormal),
-                 face_normal_vectors_data.data(), GL_STATIC_DRAW);
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER,0);
-  glBindBuffer(GL_ARRAY_BUFFER,0);
+               face_normal_vectors_data.size() * sizeof(EdgeNormal),
+               face_normal_vectors_data.data(), GL_STATIC_DRAW);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
-void Scene::cleanup() {
 
-  for (const auto &mesh : meshes) {
-    Mesh *mesh_ptr = mesh.get();
+void Scene::cleanup() {
+  for (const auto& mesh : meshes) {
+    Mesh* mesh_ptr = mesh.get();
     glDeleteVertexArrays(1, &mesh_to_render_info[mesh_ptr].vertex_VAO);
     glDeleteBuffers(1, &mesh_to_render_info[mesh_ptr].vertex_VBO);
     glDeleteBuffers(1, &mesh_to_render_info[mesh_ptr].vertex_EBO);

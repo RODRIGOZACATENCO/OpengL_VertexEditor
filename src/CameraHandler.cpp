@@ -7,7 +7,7 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/trigonometric.hpp>
 
-void CameraHandler::gimballCameraUpdate(const bool *keys) {
+void CameraHandler::gimballCameraUpdate(const bool* keys) {
   if (keys[UP]) {
     elevation += CAMERA_SPEED * delta_time;
     if (elevation > MAX_ELEVATION)
@@ -50,7 +50,6 @@ void CameraHandler::processZoom(double yoffset) {
     current_view_matrix = glm::lookAt(camera_pos, target, camera_up);
     break;
   case FREE:
-    break;
-    ;
+    break;;
   }
 }

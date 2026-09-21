@@ -4,6 +4,7 @@ project(VertexEditor)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Set your shared includes
 set(SHARED_INCLUDE_DIR "OpenGL_include")
@@ -14,8 +15,8 @@ find_package(glfw3 REQUIRED)
 find_package(assimp REQUIRED)
 find_package(glm REQUIRED)
 
-# Gather all source files (excluding main.cpp)
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*.cpp")
+# Collect source files instantly (No CONFIGURE_DEPENDS lag)
+aux_source_directory(src SOURCES)
 
 # --- 1. Vendor Library (Builds Once) ---
 add_library(Vendor STATIC
@@ -28,6 +29,8 @@ add_library(Vendor STATIC
         ${SHARED_INCLUDE_DIR}/imgui/backends/imgui_impl_opengl3.cpp
 )
 
+
+
 target_include_directories(Vendor PUBLIC
         ${SHARED_INCLUDE_DIR}
         "${SHARED_INCLUDE_DIR}/glad/include"
@@ -39,13 +42,13 @@ target_compile_definitions(Vendor PUBLIC
         IMGUI_IMPL_OPENGL_LOADER_GLAD
 )
 
-# Link glfw to Vendor so imgui_impl_glfw can locate <GLFW/glfw3.h>
 target_link_libraries(Vendor PUBLIC
         glfw
         ${OPENGL_LIBRARIES}
 )
 
 # --- 2. Core Library (Rebuilds Fast) ---
+# FIX: Removed the redundant second add_library declaration that was causing errors.
 add_library(VertexEditorCore STATIC
         ${SOURCES}
         OpenGL_include/JsonParser.h
@@ -56,7 +59,6 @@ target_include_directories(VertexEditorCore PUBLIC
         headers
 )
 
-# Link Vendor (which already brings in glfw and OpenGL) and other libraries
 target_link_libraries(VertexEditorCore PUBLIC
         Vendor
         assimp::assimp
@@ -69,10 +71,19 @@ target_compile_definitions(VertexEditorCore PUBLIC
         HEADER_DIR="../include"
 )
 
+# OPTIMIZATION 2: Heavy Precompiled Headers
+# Included the standard types and Assimp headers you are using based on your previous questions.
 target_precompile_headers(VertexEditorCore PRIVATE
         <vector>
         <string>
+        <memory>
+        <variant>
+        <unordered_map>
+        <iostream>
         <glm/glm.hpp>
+        <assimp/Importer.hpp>
+        <assimp/scene.h>
+        <assimp/postprocess.h>
 )
 
 # --- Main Executable ---

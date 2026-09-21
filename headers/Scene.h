@@ -3,7 +3,7 @@
 //
 
 #pragma once
- #include <glm/gtc/quaternion.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <map>
@@ -17,7 +17,7 @@
 #include "Mesh.h"
 
 //pair of face normals for each pair of vertices in an edge
-struct EdgeNormal{
+struct EdgeNormal {
   glm::vec4 face_normal_1;
   glm::vec4 face_normal_2;
 };
@@ -29,7 +29,7 @@ struct RenderInfo {
   unsigned int edge_VAO;
   unsigned int edge_EBO;
   std::vector<glm::vec3> faces_vertices_data; //(vertex,normal)
-  glm::quat object_orientation={1.0f, 0.0f, 0.0f, 0.0f};
+  glm::quat object_orientation = {1.0f, 0.0f, 0.0f, 0.0f};
   glm::mat4 model;
 };
 
@@ -67,19 +67,16 @@ Into a single vector ,index offset needed per mesh
   std::vector<int> vertex_already_rendered_array;
 
   unsigned int total_meshes = 0;
-  std::map<Mesh *, RenderInfo> mesh_to_render_info;
-  std::map<Mesh *, std::string> mesh_to_name;
+  std::map<Mesh*, RenderInfo> mesh_to_render_info;
+  std::map<Mesh*, std::string> mesh_to_name;
   std::vector<std::unique_ptr<Mesh>> meshes;
-
 
 public:
   Scene(glm::mat4 view, glm::mat4 projection)
-      : view(view), projection(projection) {
-    view_projection_matrix = projection * view;
-  }
+    : view(view), projection(projection) { view_projection_matrix = projection * view; }
 
   void addMesh(std::unique_ptr<Mesh> mesh, std::string name, glm::mat4 model) {
-    Mesh *mesh_ptr = mesh.get();
+    Mesh* mesh_ptr = mesh.get();
     RenderInfo render_info;
     render_info.model = model;
     mesh_to_render_info[mesh_ptr] = render_info;
@@ -91,54 +88,56 @@ public:
   }
 
   // Getters and Setters
-  void setModelMatrix(Mesh *mesh, glm::mat4 model) {
-    mesh_to_render_info[mesh].model = model;
-  }
+  void setModelMatrix(Mesh* mesh, glm::mat4 model) { mesh_to_render_info[mesh].model = model; }
 
-  void setViewMatrix(const glm::mat4 &view) {
+  void setViewMatrix(const glm::mat4& view) {
     this->view = view;
     updateViewProjectionMatrix();
   }
 
-  void setProjectionMatrix(const glm::mat4 &projection) {
+  void setProjectionMatrix(const glm::mat4& projection) {
     this->projection = projection;
     updateViewProjectionMatrix();
   }
-  void updateViewProjectionMatrix() {
-    view_projection_matrix = projection * view;
-  }
 
-  void updateVertexPos(unsigned int mesh_id,unsigned int vertex_id,glm::vec3 new_pos) ;
-  
-  const glm::mat4 &getViewProjectionMatrix() const {
-    return view_projection_matrix;
-  }
-  const glm::mat4 &getViewMatrix() const { return view; }
-  const glm::mat4 &getProjectionMatrix() const { return projection; }
+  void updateViewProjectionMatrix() { view_projection_matrix = projection * view; }
 
-  const std::vector<std::unique_ptr<Mesh>> &getMeshes() const { return meshes; }
+  void updateVertexPos(unsigned int mesh_id, unsigned int vertex_id, glm::vec3 new_pos);
 
-  RenderInfo &getRenderInfoFromMesh(Mesh *mesh) { return mesh_to_render_info[mesh]; }
+  const glm::mat4& getViewProjectionMatrix() const { return view_projection_matrix; }
 
-  std::vector<int> *getFaceSelectionArray() { return &face_selection_array; }
-  std::vector<int> *getVertexSelectionArray() {
-    return &vertex_selection_array;
-  }
-  std::vector<int> *getVertexAlreadyRenderedArray() {
-    return &vertex_already_rendered_array;
-  }
-  std::vector<int> *getEdgeSelectionArray() { return &edge_selection_array; }
-  std::string getMeshName(Mesh *mesh) { return mesh_to_name[mesh]; }
+  const glm::mat4& getViewMatrix() const { return view; }
+  const glm::mat4& getProjectionMatrix() const { return projection; }
+
+  const std::vector<std::unique_ptr<Mesh>>& getMeshes() const { return meshes; }
+
+  RenderInfo& getRenderInfoFromMesh(Mesh* mesh) { return mesh_to_render_info[mesh]; }
+
+  std::vector<int>* getFaceSelectionArray() { return &face_selection_array; }
+
+  std::vector<int>* getVertexSelectionArray() { return &vertex_selection_array; }
+
+  std::vector<int>* getVertexAlreadyRenderedArray() { return &vertex_already_rendered_array; }
+
+  std::vector<int>* getEdgeSelectionArray() { return &edge_selection_array; }
+  std::string getMeshName(Mesh* mesh) { return mesh_to_name[mesh]; }
+
   glm::mat3 getNormalMatrixFromModel(glm::mat4 model_matrix);
 
-  void meshArraysSetup(Mesh *mesh);
+  void meshArraysSetup(Mesh* mesh);
+
   void updateSelectionBuffer(GUIState state);
+
   void resetSelectionBuffer(GUIState type);
-  void meshRenderInfoSetup(Mesh *mesh);
+
+  void meshRenderInfoSetup(Mesh* mesh);
+
   void resetVertexAlreadyRendered();
 
-  void refreshMeshInformationOnRenderer(Mesh *mesh);
-  void computeUpdatedMeshData(Mesh *mesh);//called when there's need to update VBO on the mesh
-  void updateElementSelected(ElementType element_type,unsigned int mesh_id,unsigned int element_id);
+  void refreshMeshInformationOnRenderer(Mesh* mesh);
+
+  void computeUpdatedMeshData(Mesh* mesh); //called when there's need to update VBO on the mesh
+  void updateElementSelected(ElementType element_type, unsigned int mesh_id, unsigned int element_id);
+
   void cleanup();
 };

@@ -12,19 +12,20 @@
 
 // given an array of vertices to form triangles, and grupos of 3 indices that
 // from a face we need to create the mesh structure
-void Mesh::process_mesh(std::vector<float> *input_vertices,
-                        std::vector<int> *input_faces) {
+void Mesh::process_mesh(std::vector<glm::vec3>* input_vertices,
+                        std::vector<int>* input_faces, std::vector<glm::vec3>*vertex_normals) {
   int current_face_index = 0, current_halfedge_index = 0,
       current_edge_index = 0;
 
   // preprocess all vertices
-
-  for (int i = 0; i < input_vertices->size(); i += 3) {
+  int i=0;
+  for (auto vertex_pos: *input_vertices) {
     Vertex vertex;
-    vertex.point = glm::vec3((*input_vertices)[i], (*input_vertices)[i + 1],
-                             (*input_vertices)[i + 2]);
+    vertex.point = vertex_pos;
     vertex.halfedge = -1;
+    vertex.normal=(*vertex_normals)[i];
     vertices.push_back(vertex);
+    i++;
   }
 
   for (int i = 0; i < input_faces->size(); i += 3) {
@@ -34,15 +35,17 @@ void Mesh::process_mesh(std::vector<float> *input_vertices,
     // extract the indices of the vertices that form the face i
     // index of vertices that form the face e.g. {0,1,2} vertex 0 ,vertex 1,
     // vertex 2
-    int vertex_indices[3] = {(*input_faces)[i], (*input_faces)[i + 1],
-                             (*input_faces)[i + 2]};
+    int vertex_indices[3] = {
+        (*input_faces)[i], (*input_faces)[i + 1],
+        (*input_faces)[i + 2]
+      };
 
     // create the 3 halfedges of the face and fill them with basic data;
     for (int j = 0; j < 3; j++) {
       // create the halfedge
       HalfEdge half_edge;
       half_edge.vertex = vertex_indices[j]; // assign vertex
-      half_edge.face = current_face_index;  // assign face
+      half_edge.face = current_face_index; // assign face
 
       if (vertices[vertex_indices[j]].halfedge == -1)
         vertices[vertex_indices[j]].halfedge = current_halfedge_index + j;
@@ -56,11 +59,12 @@ void Mesh::process_mesh(std::vector<float> *input_vertices,
     // 3 new edge objects created, halfedge_index represents the first of the 3
     // vertices link all 3 half edges
     for (int j = 0; j < 3;
-         j++) { // assign next,prev,create edges, check for twin
+         j++) {
+      // assign next,prev,create edges, check for twin
       half_edges[current_halfedge_index + j].next =
-          current_halfedge_index + (j + 1) % 3; // assign next
+        current_halfedge_index + (j + 1) % 3; // assign next
       half_edges[current_halfedge_index + j].prev =
-          current_halfedge_index + (j + 2) % 3; // assign prev
+        current_halfedge_index + (j + 2) % 3; // assign prev
       /*first we need to check if halfedge twin exists
       -if twin exists:
               assign twin to current half edge
@@ -78,25 +82,25 @@ void Mesh::process_mesh(std::vector<float> *input_vertices,
       // opposite direction :if it exists ,it's halfedge must be the twin half
       // edge
       if (edge_lookup.contains({next_vertex, current_vertex})) {
-
         int twin_halfedge_index =
-            edges[edge_lookup.at({next_vertex, current_vertex})]
-                .halfedge; // twin_index on main edge vector
+          edges[edge_lookup.at({next_vertex, current_vertex})]
+          .halfedge; // twin_index on main edge vector
         half_edges[current_halfedge_index + j].twin =
-            twin_halfedge_index; // assign twin to halfedge
+          twin_halfedge_index; // assign twin to halfedge
         half_edges[twin_halfedge_index].twin =
-            current_halfedge_index + j; // assign half edge to twin
+          current_halfedge_index + j; // assign half edge to twin
         half_edges[current_halfedge_index + j].edge =
-            half_edges[twin_halfedge_index]
-                .edge; // assign twin's edge to current halfedge
-      } else {
+          half_edges[twin_halfedge_index]
+          .edge; // assign twin's edge to current halfedge
+      }
+      else {
         Edge edge; // create half edge
         edge.halfedge = current_halfedge_index + j;
         half_edges[current_halfedge_index + j].twin = -1;
         half_edges[current_halfedge_index + j].edge = current_edge_index;
         edges.push_back(edge);
         edge_lookup.insert(
-            {{current_vertex, next_vertex}, current_edge_index++});
+          {{current_vertex, next_vertex}, current_edge_index++});
       }
     }
     current_halfedge_index += 3;
@@ -110,11 +114,11 @@ void Mesh::process_mesh(std::vector<float> *input_vertices,
 /*given the complete mesh, calculate the normal vector of each vertex
  taking the average normal across all faces */
 void Mesh::computeVertexNormalVectors() {
-  for (auto &vertex : vertices) {
+  for (auto& vertex : vertices) {
     // starting face to test
     glm::vec3 sum = glm::vec3(0.0f);
     unsigned int check_backwards = 0;
-    HalfEdge *start_halfedge = &half_edges[vertex.halfedge];
+    HalfEdge* start_halfedge = &half_edges[vertex.halfedge];
     auto current_halfedge = start_halfedge;
     do {
       sum += faces[current_halfedge->face].normal;
@@ -124,7 +128,8 @@ void Mesh::computeVertexNormalVectors() {
         break;
       }
       current_halfedge = &half_edges[half_edges[current_halfedge->twin].next];
-    } while (current_halfedge != start_halfedge);
+    }
+    while (current_halfedge != start_halfedge);
 
     if (check_backwards) {
       current_halfedge = start_halfedge;
@@ -133,8 +138,8 @@ void Mesh::computeVertexNormalVectors() {
           break;
         current_halfedge = &half_edges[half_edges[current_halfedge->prev].twin];
         sum += faces[current_halfedge->face].normal;
-
-      } while (true);
+      }
+      while (true);
     }
     vertex.normal = glm::normalize(sum);
   }
@@ -142,7 +147,7 @@ void Mesh::computeVertexNormalVectors() {
 
 /*calculates the normal direction of each face*/
 void Mesh::computeFaceNormalVectors() {
-  for (auto &face : faces) {
+  for (auto& face : faces) {
     auto [vertex1, vertex2, vertex3] = vertexIndicesFromFace(face);
     glm::vec3 direction1 = vertices[vertex2].point - vertices[vertex1].point;
     glm::vec3 direction2 = vertices[vertex3].point - vertices[vertex1].point;
@@ -150,12 +155,13 @@ void Mesh::computeFaceNormalVectors() {
     face.normal = normal;
   }
 }
+
 void Mesh::show_mesh_structure() {
   std::cout << "EDGES: " << edges.size() << std::endl;
   int i = 0;
-  for (const auto &key : edge_lookup | std::views::keys) {
+  for (const auto& key : edge_lookup | std::views::keys) {
     std::cout << "edge :" << i++ << "  " << key.first << "-->" << key.second
-              << std::endl;
+      << std::endl;
   }
   std::cout << std::endl << std::endl;
   for (int i = 0; i < faces.size(); i++) {
@@ -173,9 +179,7 @@ void Mesh::show_mesh_structure() {
       halfedge_index = half_edge.next;
     }
   }
-  for (auto index : face_render_indices) {
-    std::cout << index << " ";
-  }
+  for (auto index : face_render_indices) { std::cout << index << " "; }
 }
 
 void Mesh::setupFaceRenderIndices() {
@@ -197,13 +201,14 @@ void Mesh::setupEdgeRenderIndices() {
     int halfedge_index = edge.halfedge;
     edge_render_indices.push_back(half_edges[halfedge_index].vertex);
     edge_render_indices.push_back(
-        half_edges[half_edges[halfedge_index].next].vertex);
+      half_edges[half_edges[halfedge_index].next].vertex);
   }
 }
+
 glm::vec3 Mesh::randomRGB() {
   // 1. Set up the random number generator (do this statically so it's only
   // seeded once)
-  static std::random_device rd;  // Hardware seed
+  static std::random_device rd; // Hardware seed
   static std::mt19937 gen(rd()); // Mersenne Twister engine
 
   // 2. Define the distribution range (0.0 to 1.0 for OpenGL)
@@ -217,9 +222,10 @@ glm::vec3 Mesh::randomRGB() {
   return glm::vec3(r, g, b);
 }
 
-std::pair< int, int> Mesh::getFaceIndicesAssociatedWithEdge(unsigned int edge_index) {
-   int face_1=half_edges[edges[edge_index].halfedge].face;
-   int face_2=(half_edges[edges[edge_index].halfedge].twin !=-1 ) 
-   ? half_edges[half_edges[edges[edge_index].halfedge].twin].face : -1;
-   return{face_1,face_2};
+std::pair<int, int> Mesh::getFaceIndicesAssociatedWithEdge(unsigned int edge_index) {
+  int face_1 = half_edges[edges[edge_index].halfedge].face;
+  int face_2 = (half_edges[edges[edge_index].halfedge].twin != -1)
+                 ? half_edges[half_edges[edges[edge_index].halfedge].twin].face
+                 : -1;
+  return {face_1, face_2};
 }

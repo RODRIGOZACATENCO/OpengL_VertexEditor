@@ -15,6 +15,9 @@
 #include <iostream>
 #include <ostream>
 #include <random>
+
+#include "ObjHandler.h"
+
 glm::vec3 generateRandomColor() {
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -25,91 +28,82 @@ glm::vec3 generateRandomColor() {
 
 // given the scene to render, the window will render all objects
 // mainWindow always initializes with a default window named "default"
-void MainWindow::use(std::string *scene_name) {
+void MainWindow::use(std::string* scene_name) {
   std::string default_scene_name = "default";
   if (scene_name == nullptr)
     scene_name = &default_scene_name;
   // the renderer will accept the scene and draw it in the screen
-  renderer->setCurrentScene(scene_name_to_scene_object[*scene_name].get());
-  element_editing->setCurrentScene(scene_name_to_scene_object[*scene_name].get());
-  std::string error;
-  if (isWindowReady(&error)) {
-    while (!glfwWindowShouldClose(window)) {
-      element_editing->setViewProjectionMatrix(renderer->getCurrentScene()->getViewProjectionMatrix());
-      // element_editing->setCurrentSelectedElement(VERTEX,0,4);
-      // element_editing->vertexRayCaster(getMouseNDC(window),camera.getCameraPosition(),camera.getCameraFront());
+  renderer->setCurrentScene(scene_name_to_object[*scene_name].get());
+  element_editing->setCurrentScene(scene_name_to_object[*scene_name].get());
 
-      float time = glfwGetTime();
-      delta_time = time - last_frame;
-      last_frame = time;
+  while (!glfwWindowShouldClose(window)) {
+    element_editing->setViewProjectionMatrix(renderer->getCurrentScene()->getViewProjectionMatrix());
+    // element_editing->setCurrentSelectedElement(VERTEX,0,4);
+    // element_editing->vertexRayCaster(getMouseNDC(window),camera.getCameraPosition(),camera.getCameraFront());
 
-      renderer->setDeltaTime(delta_time);
-      camera.setDeltaTime(delta_time);
-      renderer->setRenderMode(gui.getCurrentState());
-      // 1. POLL EVENTS FIRST
-      glfwPollEvents();
-      processInput();
-      if (gui.getResetFlag()) {
-        renderer->getCurrentScene()->resetSelectionBuffer(
-            gui.getCurrentState());
-        gui.setResetFlag(0);
-      }
+    float time = glfwGetTime();
+    delta_time = time - last_frame;
+    last_frame = time;
 
-      // 2. THEN START NEW IMGUI FRAME
-      ImGui_ImplOpenGL3_NewFrame();
-      ImGui_ImplGlfw_NewFrame();
-      ImGui::NewFrame();
-
-      // 3. RENDER SCENE AND UI
-      renderer->getCurrentScene()->setViewMatrix(camera.getCurrentViewMatrix());
-      renderer->processDrawCall(main_render_pass);
-      gui.showMainWindowGUI();
-
-      glfwSwapBuffers(window);
+    renderer->setDeltaTime(delta_time);
+    camera.setDeltaTime(delta_time);
+    renderer->setRenderMode(gui.getCurrentState());
+    // 1. POLL EVENTS FIRST
+    glfwPollEvents();
+    processInput();
+    if (gui.getResetFlag()) {
+      renderer->getCurrentScene()->resetSelectionBuffer(
+        gui.getCurrentState());
+      gui.setResetFlag(0);
     }
-  } else {
-    std::cout << error << std::endl;
+
+    // 2. THEN START NEW IMGUI FRAME
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    // 3. RENDER SCENE AND UI
+    renderer->getCurrentScene()->setViewMatrix(camera.getCurrentViewMatrix());
+    renderer->processDrawCall(main_render_pass);
+    gui.showMainWindowGUI();
+
+    glfwSwapBuffers(window);
   }
 }
 
 void MainWindow::cleanup() {
   if (renderer)
     renderer->cleanup();
-  for (auto &[name, scene] : scene_name_to_scene_object) {
+  for (auto& [name, scene] : scene_name_to_object) {
     if (scene)
       scene->cleanup();
   }
 }
 
-void MainWindow::framebufferSizeCallback(GLFWwindow *window, int width,
+void MainWindow::framebufferSizeCallback(GLFWwindow* window, int width,
                                          int height) {
   glViewport(0, 0, width, height);
-  MainWindow *instance =
-      static_cast<MainWindow *>(glfwGetWindowUserPointer(window));
+  MainWindow* instance =
+    static_cast<MainWindow*>(glfwGetWindowUserPointer(window));
 
   // 4. Forward the call to the non-static member
-  if (instance) {
-    instance->onFramebufferSize();
-  }
+  if (instance) { instance->onFramebufferSize(); }
 }
 
 void MainWindow::onFramebufferSize() {
   renderer->setScreenSize(width, height);
   renderer->resizeFramebuffer();
-  element_editing->setScreenSize(width,height);
-
+  element_editing->setScreenSize(width, height);
 }
 
-void MainWindow::mainWindowMouseCallback(GLFWwindow *window, int button,
+void MainWindow::mainWindowMouseCallback(GLFWwindow* window, int button,
                                          int action, int mods) {
   // 3. Retrieve the pointer we stored earlier
-  MainWindow *instance =
-      static_cast<MainWindow *>(glfwGetWindowUserPointer(window));
+  MainWindow* instance =
+    static_cast<MainWindow*>(glfwGetWindowUserPointer(window));
 
   // 4. Forward the call to the non-static member
-  if (instance) {
-    instance->onMouseButton(button, action, mods);
-  }
+  if (instance) { instance->onMouseButton(button, action, mods); }
 }
 
 void MainWindow::onMouseButton(int button, int action, int mods) {
@@ -129,37 +123,36 @@ void MainWindow::onMouseButton(int button, int action, int mods) {
       auto [clicked_ID, mesh_id, empty] = *result;
       switch (gui.getCurrentState()) {
       case FACE_EDITING:
-        renderer->getCurrentScene()->updateElementSelected(FACE,mesh_id, clicked_ID);
-        element_editing->setCurrentSelectedElement(FACE,mesh_id, clicked_ID);
+        renderer->getCurrentScene()->updateElementSelected(FACE, mesh_id, clicked_ID);
+        element_editing->setCurrentSelectedElement(FACE, mesh_id, clicked_ID);
         break;
 
       case VERTEX_EDITING:
-        renderer->getCurrentScene()->updateElementSelected(VERTEX,mesh_id, clicked_ID);
-        element_editing->setCurrentSelectedElement(VERTEX,mesh_id, clicked_ID);
+        renderer->getCurrentScene()->updateElementSelected(VERTEX, mesh_id, clicked_ID);
+        element_editing->setCurrentSelectedElement(VERTEX, mesh_id, clicked_ID);
         break;
       case EDGE_EDITING:
-        renderer->getCurrentScene()->updateElementSelected(EDGE,mesh_id, clicked_ID);
-        element_editing->setCurrentSelectedElement(EDGE,mesh_id, clicked_ID);
+        renderer->getCurrentScene()->updateElementSelected(EDGE, mesh_id, clicked_ID);
+        element_editing->setCurrentSelectedElement(EDGE, mesh_id, clicked_ID);
         break;
       }
     }
   }
 }
 
-void MainWindow::mainWindowKeyCallback(GLFWwindow *window, int key,
+void MainWindow::mainWindowKeyCallback(GLFWwindow* window, int key,
                                        int scancode, int action, int mods) {
   // 3. Retrieve the pointer we stored earlier
-  MainWindow *instance =
-      static_cast<MainWindow *>(glfwGetWindowUserPointer(window));
+  MainWindow* instance =
+    static_cast<MainWindow*>(glfwGetWindowUserPointer(window));
 
   // 4. Forward the call to the non-static member
-  if (instance) {
-    instance->onKeyboardInput(window, key, scancode, action, mods);
-  }
+  if (instance) { instance->onKeyboardInput(window, key, scancode, action, mods); }
 }
 
-void MainWindow::onKeyboardInput(GLFWwindow *window, int key, int scancode,
+void MainWindow::onKeyboardInput(GLFWwindow* window, int key, int scancode,
                                  int action, int mods) {}
+
 void MainWindow::processInput() {
   keys[UP] = (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS);
   keys[DOWN] = (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS);
@@ -167,52 +160,36 @@ void MainWindow::processInput() {
   keys[RIGHT] = (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS);
   camera.gimballCameraUpdate(keys);
 
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-    glfwSetWindowShouldClose(window, GLFW_TRUE);
-  }
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) { glfwSetWindowShouldClose(window, GLFW_TRUE); }
 }
 
-void MainWindow::mainWindowScrollCallback(GLFWwindow *window, double xoffset,
+void MainWindow::mainWindowScrollCallback(GLFWwindow* window, double xoffset,
                                           double yoffset) {
+  MainWindow* instance =
+    static_cast<MainWindow*>(glfwGetWindowUserPointer(window));
 
-  MainWindow *instance =
-      static_cast<MainWindow *>(glfwGetWindowUserPointer(window));
-
-  if (instance) {
-    instance->onScrollCallback(window, xoffset, yoffset);
-  }
-}
-void MainWindow::onScrollCallback(GLFWwindow *window, double xoffset,double yoffset) {
-  camera.processZoom(-yoffset);
+  if (instance) { instance->onScrollCallback(window, xoffset, yoffset); }
 }
 
-bool MainWindow::isWindowReady(std::string *out_error) const {
-  auto fail = [&](const std::string &msg) {
-    if (out_error)
-      *out_error = msg;
-    return false;
-  };
+void MainWindow::onScrollCallback(GLFWwindow* window, double xoffset, double yoffset) { camera.processZoom(-yoffset); }
 
-  if (!window)
-    return fail("No GLFW window set.");
-  if (!renderer)
-    return fail("No renderer set.");
-  if (width <= 0 || height <= 0)
-    return fail("Invalid window dimensions.");
-  if (scene_name_to_scene_object.empty())
-    return fail("No scenes added.");
+void MainWindow::load_scene(const std::string& scene_name) {
+  glfwGetFramebufferSize(window, &width, &height);
+  JsonValue scenes = json_parser.parseFile("../scenes.json");
 
-  bool has_active_scene = false;
-  for (auto &[name, scene] : scene_name_to_scene_object) {
-    if (scene != nullptr) {
-      has_active_scene = true;
-      break;
-    }
+  if(scene_name_to_object.contains(scene_name)) {
+    std::cout<<"\""<<"scene_name"<<"\""<<" already loaded";
+    return;
   }
-  if (!has_active_scene)
-    return fail("All scenes are null.");
+  auto scene= std::make_unique<Scene>(camera.getCurrentViewMatrix(),projection);
 
-  return true;
+
+  for(auto &[mesh_name,mesh_info]: scenes[scene_name]["meshes"].as_object()) {
+    RawMeshData data= obj_parser.getObjectInfo(mesh_info["file_name"]);
+    auto mesh=std::make_unique<Mesh>(&data.vertices,&data.faces,&data.vertex_normals);
+    scene->addMesh(std::move(mesh),mesh_name,glm::mat4(1.0f));
+  }
+  scene_name_to_object[scene_name]=std::move(scene);
 }
 
 //gives the mouse x,y position on the screen in NDC
@@ -224,7 +201,7 @@ glm::vec2 MainWindow::getMouseNDC(GLFWwindow* window) {
 
   //normalizes the coordinates into (-1,1) space
   return {
-    (float)(x / w) * 2.0f - 1.0f,
-    (float)((h - y) / h) * 2.0f - 1.0f  // flip y
-};
+      (float)(x / w) * 2.0f - 1.0f,
+      (float)((h - y) / h) * 2.0f - 1.0f // flip y
+    };
 }

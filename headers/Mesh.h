@@ -10,6 +10,7 @@
 #include <vector>
 
 struct HalfEdge;
+
 struct Vertex {
   glm::vec3 point;
   int halfedge;
@@ -33,42 +34,46 @@ struct HalfEdge {
   int edge;
   int face;
 };
+
 class Mesh {
 public:
-  Mesh(std::vector<float> *vertices, std::vector<int> *faces) {
-    process_mesh(vertices, faces);
+  Mesh(std::vector<glm::vec3>* vertices, std::vector<int>* faces, std::vector<glm::vec3>*vertex_normals ) {
+    process_mesh(vertices, faces,vertex_normals);
     setupFaceRenderIndices();
     setupEdgeRenderIndices();
     computeFaceNormalVectors();
     computeVertexNormalVectors();
   }
 
-  void process_mesh(std::vector<float> *vertices, std::vector<int> *faces);
+  void process_mesh(std::vector<glm::vec3>* vertices, std::vector<int>* faces, std::vector<glm::vec3>*vertex_normals);
+
   void show_mesh_structure();
+
   void setupFaceRenderIndices();
+
   void setupEdgeRenderIndices();
+
   void computeVertexNormalVectors();
+
   void computeFaceNormalVectors();
 
   // given an edge, will return the face indices of the faces the edge touches
-  std::pair< int,  int> getFaceIndicesAssociatedWithEdge(unsigned int edge_index);
+  std::pair<int, int> getFaceIndicesAssociatedWithEdge(unsigned int edge_index);
 
   // Getters
-  const std::vector<HalfEdge> &getHalfEdges() const { return half_edges; }
-  const std::vector<Face> &getFaces() const { return faces; }
-  const std::vector<Vertex> &getVertices() const { return vertices; }
-  const std::vector<Edge> &getEdges() const { return edges; }
-  const std::vector<unsigned int> &getFaceRenderIndices() const {
-    return face_render_indices;
-  }
-  const std::vector<unsigned int> &getEdgeRenderIndices() const {
-    return edge_render_indices;
-  }
-  const std::map<std::pair<int, int>, int> &getEdgeLookup() const{
-    return  edge_lookup;
-  }
+  const std::vector<HalfEdge>& getHalfEdges() const { return half_edges; }
+  const std::vector<Face>& getFaces() const { return faces; }
+  const std::vector<Vertex>& getVertices() const { return vertices; }
+  const std::vector<Edge>& getEdges() const { return edges; }
+
+  const std::vector<unsigned int>& getFaceRenderIndices() const { return face_render_indices; }
+
+  const std::vector<unsigned int>& getEdgeRenderIndices() const { return edge_render_indices; }
+
+  const std::map<std::pair<int, int>, int>& getEdgeLookup() const { return edge_lookup; }
+
   HalfEdge getHalfedgeFromIndex(unsigned int index) { return half_edges[index]; }
-  Vertex &getvVertexFromIndex(unsigned int index) { return vertices[index]; }
+  Vertex& getvVertexFromIndex(unsigned int index) { return vertices[index]; }
   Edge getEdgeFromIndex(unsigned int index) { return edges[index]; }
 
 
@@ -95,5 +100,6 @@ private:
   std::vector<unsigned int> face_render_indices;
   std::vector<unsigned int> edge_render_indices;
   std::vector<glm::vec3> colors;
+
   glm::vec3 randomRGB();
 };

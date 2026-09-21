@@ -7,10 +7,10 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "ObjHandler.h"
+
 int main() {
   ObjHandler handler;
   handler.getObjectInfo("cube.obj");
-  int a=0;
   // GLFW Init
   if (!glfwInit())
     return -1;
@@ -18,8 +18,8 @@ int main() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  GLFWwindow *window =
-      glfwCreateWindow(1200, 800, "VertexEditor", nullptr, nullptr);
+  GLFWwindow* window =
+    glfwCreateWindow(1200, 800, "VertexEditor", nullptr, nullptr);
   if (window == nullptr) {
     std::cout << "Failed to create GLFW window" << std::endl;
     glfwTerminate();
@@ -28,14 +28,14 @@ int main() {
   glfwMakeContextCurrent(window);
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
   // GLAD Init  
-  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+  if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
     std::cout << "Failed to initialize GLAD" << std::endl;
     return -1;
   }
   MainWindow main_window(window);
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-  ImGuiIO &io = ImGui::GetIO();
+  ImGuiIO& io = ImGui::GetIO();
   (void)io;
   ImGui::StyleColorsDark();
   ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -48,9 +48,6 @@ int main() {
 
   ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
   ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
-
-  //@TODO create simple functions that save and load processed meshes as a
-  // binary file
 
   main_window.use();
   main_window.cleanup();
