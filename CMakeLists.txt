@@ -53,6 +53,8 @@ add_library(VertexEditorCore STATIC
         ${SOURCES}
         OpenGL_include/JsonParser.h
         OpenGL_include/ObjHandler.h
+        headers/KeyboardHandler.h
+        src/KeybardHandler.cpp
 )
 
 target_include_directories(VertexEditorCore PUBLIC
@@ -87,5 +89,6 @@ target_precompile_headers(VertexEditorCore PRIVATE
 )
 
 # --- Main Executable ---
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} main.cpp
+        headers/KeyboardHandler.h)
 target_link_libraries(${PROJECT_NAME} PRIVATE VertexEditorCore)

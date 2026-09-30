@@ -38,9 +38,6 @@ void MainWindow::use(std::string* scene_name) {
 
   while (!glfwWindowShouldClose(window)) {
     element_editing->setViewProjectionMatrix(renderer->getCurrentScene()->getViewProjectionMatrix());
-    // element_editing->setCurrentSelectedElement(VERTEX,0,4);
-    // element_editing->vertexRayCaster(getMouseNDC(window),camera.getCameraPosition(),camera.getCameraFront());
-
     float time = glfwGetTime();
     delta_time = time - last_frame;
     last_frame = time;
@@ -65,7 +62,7 @@ void MainWindow::use(std::string* scene_name) {
     // 3. RENDER SCENE AND UI
     renderer->getCurrentScene()->setViewMatrix(camera.getCurrentViewMatrix());
     renderer->processDrawCall(main_render_pass);
-    gui.showMainWindowGUI();
+    gui.showMainWindowGUI(keys);
 
     glfwSwapBuffers(window);
   }
@@ -140,6 +137,21 @@ void MainWindow::onMouseButton(int button, int action, int mods) {
   }
 }
 
+void MainWindow::mainWindowMousePosCallback(GLFWwindow* window, double xposIn, double yposIn) {
+  MainWindow* instance =
+    static_cast<MainWindow*>(glfwGetWindowUserPointer(window));
+
+  // 4. Forward the call to the non-static member
+  if (instance) instance->onMouseMovement(xposIn, yposIn);
+}
+
+void MainWindow::onMouseMovement(double xposIn, double yposIn) {
+
+  if(camera.getCurrCameraMode()==FREE && !gui.isPanelVisible) {
+    camera.freeCameraUpdate(keys,xposIn,yposIn);
+  }
+}
+
 void MainWindow::mainWindowKeyCallback(GLFWwindow* window, int key,
                                        int scancode, int action, int mods) {
   // 3. Retrieve the pointer we stored earlier
@@ -151,16 +163,22 @@ void MainWindow::mainWindowKeyCallback(GLFWwindow* window, int key,
 }
 
 void MainWindow::onKeyboardInput(GLFWwindow* window, int key, int scancode,
-                                 int action, int mods) {}
+                                 int action, int mods) {
+
+}
 
 void MainWindow::processInput() {
-  keys[UP] = (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS);
-  keys[DOWN] = (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS);
-  keys[LEFT] = (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS);
-  keys[RIGHT] = (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS);
-  camera.gimballCameraUpdate(keys);
 
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) { glfwSetWindowShouldClose(window, GLFW_TRUE); }
+  keys[UP] =    (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS);
+  keys[DOWN] =  (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS);
+  keys[LEFT] =  (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS);
+  keys[RIGHT] = (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS);
+  keys[TAB]=    (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS);
+  if(camera.getCurrCameraMode()==GIMBALL) {
+    camera.gimballCameraUpdate(keys);
+  }
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    { glfwSetWindowShouldClose(window, GLFW_TRUE); }
 }
 
 void MainWindow::mainWindowScrollCallback(GLFWwindow* window, double xoffset,
@@ -187,9 +205,17 @@ void MainWindow::load_scene(const std::string& scene_name) {
   for(auto &[mesh_name,mesh_info]: scenes[scene_name]["meshes"].as_object()) {
     RawMeshData data= obj_parser.getObjectInfo(mesh_info["file_name"]);
     auto mesh=std::make_unique<Mesh>(&data.vertices,&data.faces,&data.vertex_normals);
-    scene->addMesh(std::move(mesh),mesh_name,glm::mat4(1.0f));
+    std::cout<<mesh_info["world_pos"][0].as_number();
+     glm::vec3 start_pos={
+       mesh_info["world_pos"][0].as_number(),
+       mesh_info["world_pos"][1].as_number(),
+       mesh_info["world_pos"][2].as_number()
+     };
+    glm::mat4 model_matrix = glm::translate(glm::mat4(1.0f),start_pos );
+    scene->addMesh(std::move(mesh),mesh_name,model_matrix);
   }
   scene_name_to_object[scene_name]=std::move(scene);
+
 }
 
 //gives the mouse x,y position on the screen in NDC

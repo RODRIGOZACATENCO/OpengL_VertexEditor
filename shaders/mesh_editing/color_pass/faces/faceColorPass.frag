@@ -10,7 +10,7 @@ out vec4 FragColor;
 void main() {
 
 bool isFaceSelected = elements_selected[faces_offset + int(gl_PrimitiveID)] == 1;
-vec4 fillColor =vec4(0.2, 0.2, 0.2, 1.0);
+vec4 fillColor =vec4(0.529, 0.749, 0.729, 1.0);
 if(isFaceSelected && current_rendering_mode==FACE_EDITING){
     fillColor=vec4(0.8, 0.2, 0.2, 1.0);
 

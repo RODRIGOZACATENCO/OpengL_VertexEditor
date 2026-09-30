@@ -352,3 +352,8 @@ private:
     }
   }
 };
+
+class JsonObj { //used when creating a new josn file
+  void root
+
+};

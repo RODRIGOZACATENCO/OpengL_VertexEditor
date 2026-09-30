@@ -2,9 +2,8 @@
 #include <memory>
 #include <vector>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
-#include <variant>
+
 
 enum num_type {
     INT,
@@ -16,7 +15,6 @@ struct RawMeshData {
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec3> vertex_normals;
     std::vector<int> faces;
-
     friend std::ostream& operator<<(std::ostream& os, const RawMeshData& raw_mesh_data) { return os; }
 };
 
@@ -68,6 +66,9 @@ public:
 
     RawMeshData getObjectInfo(const std::string& file_name) {
         curr_pos = 0;
+        data.faces.clear();
+        data.vertices.clear();
+        data.vertex_normals.clear();
         readFile(file_name);
         unsigned int file_size = file_str.size();
         try {

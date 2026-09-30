@@ -9,10 +9,12 @@
 #include "imgui_impl_opengl3.h"
 // Face button
 
-void GUI::showMainWindowGUI() {
+void GUI::showMainWindowGUI(bool *keys) {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
-
+	if(keys[TAB]) {
+		isPanelVisible=!isPanelVisible;
+	}
 	if (!isPanelVisible) {
 		// Show only a small button in the top-left corner to re-open the panel
 		ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x, viewport->WorkPos.y), ImGuiCond_Always);

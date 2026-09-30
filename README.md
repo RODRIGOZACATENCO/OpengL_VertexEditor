@@ -1,4 +1,4 @@
-# VertexEditor
+ # VertexEditor
 
 A 3D mesh editor built with OpenGL, ImGui, and Assimp.
 

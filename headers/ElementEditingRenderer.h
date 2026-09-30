@@ -75,6 +75,7 @@ public:
     setViewProjectionMatrices();
   }
 
+
   Scene* getCurrentScene() { return current_scene; }
 
   void setRenderMode(GUIState state) { this->current_rendering_mode = state; }
@@ -95,7 +96,7 @@ public:
   void renderEditingAxis();
 
   // setups common data for all types of render
-  void processDrawCall(Render_type type_of_render);
+  void processDrawCall(RenderType type_of_render);
 
   void vertexDetectionPass();
 

@@ -8,7 +8,7 @@
 #include <iostream>
 #include <vector>
 
-void ElementEditingRenderer::processDrawCall(Render_type type_of_render) {
+void ElementEditingRenderer::processDrawCall(RenderType type_of_render) {
   setViewProjectionMatrices();
   glfwGetFramebufferSize(window, (&width), &height);
   glViewport(0, 0, width, height);
@@ -302,8 +302,8 @@ void ElementEditingRenderer::setViewProjectionMatrices() {
                           current_scene->getViewProjectionMatrix());
 
       // vertex shaders need projection separated
-      if (i == Shader_names::vertex_detection ||
-        i == Shader_names::vertex_color_pass) {
+      if (i == ShaderNames::vertex_detection ||
+        i == ShaderNames::vertex_color_pass) {
         shaders[i]->setMat4("projection", current_scene->getProjectionMatrix());
       }
     }
@@ -331,39 +331,39 @@ void ElementEditingRenderer::initializeShaders() {
   std::string axis_lines_dir = root + "shaders/mesh_editing/main_window/";
   std::string render_window_dir = root + "shaders/mesh_editing/main_window/render_window/";
 
-  shaders.resize(Shader_names::shader_count); // resize to create elements
+  shaders.resize(ShaderNames::shader_count); // resize to create elements
 
-  shaders[Shader_names::face_color_pass] =
+  shaders[ShaderNames::face_color_pass] =
     std::make_unique<Shader>(face_color_pass_dir + "faceColorPass.vert",
                              face_color_pass_dir + "faceColorPass.frag");
 
-  shaders[Shader_names::vertex_color_pass] =
+  shaders[ShaderNames::vertex_color_pass] =
     std::make_unique<Shader>(vertex_color_pass_dir + "vertexColorPass.vert",
                              vertex_color_pass_dir + "vertexColorPass.frag");
 
-  shaders[Shader_names::edge_color_pass] =
+  shaders[ShaderNames::edge_color_pass] =
     std::make_unique<Shader>(edge_color_pass_dir + "edgeColorPass.vert",
                              edge_color_pass_dir + "edgeColorPass.geom",
                              edge_color_pass_dir + "edgeColorPass.frag");
 
-  shaders[Shader_names::face_detection] =
+  shaders[ShaderNames::face_detection] =
     std::make_unique<Shader>(face_detection_dir + "faceDetection.vert",
                              face_detection_dir + "faceDetection.frag");
 
-  shaders[Shader_names::vertex_detection] =
+  shaders[ShaderNames::vertex_detection] =
     std::make_unique<Shader>(vertex_detection_dir + "vertexDetection.vert",
                              vertex_detection_dir + "vertexDetection.geom",
                              vertex_detection_dir + "vertexDetection.frag");
 
-  shaders[Shader_names::edge_detection] =
+  shaders[ShaderNames::edge_detection] =
     std::make_unique<Shader>(edge_detection_dir + "edgeDetection.vert",
                              edge_detection_dir + "edgeDetection.geom",
                              edge_detection_dir + "edgeDetection.frag");
-  shaders[Shader_names::axis_lines_shader] =
+  shaders[ShaderNames::axis_lines_shader] =
     std::make_unique<Shader>(axis_lines_dir + "gridline.vert",
                              axis_lines_dir + "gridline.frag");
 
-  shaders[Shader_names::render_window] =
+  shaders[ShaderNames::render_window] =
     std::make_unique<Shader>(render_window_dir + "render_window.vert",
                              render_window_dir + "render_window.frag");
 
@@ -419,15 +419,23 @@ void ElementEditingRenderer::cleanup() {
   }
 }
 
-//TODO FIX PLS PLS PLS
 void ElementEditingRenderer::resizeFramebuffer() {
   glfwGetFramebufferSize(window, &width, &height);
   glBindTexture(GL_TEXTURE_2D, frame_buffers[MAIN_COLOR_BUFFER].texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32UI, width, height, 0, GL_RGB_INTEGER,
                GL_UNSIGNED_INT, nullptr);
+  glBindTexture(GL_TEXTURE_2D, frame_buffers[MAIN_COLOR_BUFFER].depth_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0,
+               GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+  glBindTexture(GL_TEXTURE_2D, frame_buffers[ELEMENT_DETECTION_BUFFER].texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32UI, width, height, 0, GL_RGB_INTEGER,
+               GL_UNSIGNED_INT, nullptr);
+  glBindTexture(GL_TEXTURE_2D, frame_buffers[ELEMENT_DETECTION_BUFFER].depth_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0,
+               GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
   glBindTexture(GL_TEXTURE_2D, 0); // Unbind when done
 
-  // 2. Bind and resize the depth renderbuffer attachment
+
 }
 
 std::optional<std::tuple<unsigned int, unsigned int, unsigned int>>
@@ -473,7 +481,7 @@ bool ElementEditingRenderer::rendererIsReady(std::string* out_error) const {
     return fail("No GLFW window set.");
   if (!current_scene)
     return fail("No scene set.");
-  if (shaders.size() < Shader_names::shader_count)
+  if (shaders.size() < ShaderNames::shader_count)
     return fail("Shaders array is not fully populated.");
   if (width <= 0 || height <= 0)
     return fail("Invalid screen dimensions.");

@@ -92,10 +92,10 @@ private:
   bool keys[1024] = {false};
 
 public:
-  MainWindow(GLFWwindow* window) : window(window), width(0), height(0) {
+  MainWindow(GLFWwindow* window) : camera(&gui,window), window(window), width(0), height(0) {
     glfwGetFramebufferSize(window, &width, &height);
     projection = glm::perspective(
-        glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
+      glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 
     gui.setState(FACE_EDITING);
     load_scene("default");
@@ -107,10 +107,12 @@ public:
     glfwSetWindowUserPointer(window, this);
     glfwSetKeyCallback(window, mainWindowKeyCallback);
     glfwSetMouseButtonCallback(window, mainWindowMouseCallback);
+    glfwSetCursorPosCallback(window,mainWindowMousePosCallback);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     glfwSetScrollCallback(window, mainWindowScrollCallback);
     element_editing = std::make_unique<ElementEditing>(scene_name_to_object["default"].get());
   }
+
   void load_scene(const std::string& scene_name="default");
   // Getters and Setters
   GLFWwindow* getWindow() const { return window; }
@@ -142,7 +144,8 @@ public:
 
   static void mainWindowScrollCallback(GLFWwindow* window, double xoffset,
                                        double yoffset);
-
+  static  void mainWindowMousePosCallback(GLFWwindow *window, double xposIn, double yposIn);
+  void onMouseMovement(double xposIn, double yposIn);
   void onFramebufferSize();
 
   void onMouseButton(int button, int action, int mods);
@@ -164,7 +167,7 @@ public:
 
   void cleanup();
 
-  void addScene(std::string name, std::unique_ptr<Scene> scene) { scene_name_to_object[name] = std::move(scene); }
+  void addScene(const std::string& name, std::unique_ptr<Scene> scene) { scene_name_to_object[name] = std::move(scene); }
 
   glm::vec2 getMouseNDC(GLFWwindow* window);
 

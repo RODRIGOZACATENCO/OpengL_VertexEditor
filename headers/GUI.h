@@ -3,8 +3,7 @@
 //
 
 #pragma once
-
-#include "CameraHandler.h"
+#include<CommonTypes.h>
 
 struct MainGUI_state {
   bool isFaceSelectionActive = false;
@@ -14,6 +13,9 @@ struct MainGUI_state {
 };
 
 class GUI {
+public:
+  bool has_state_changed = false;
+  bool isPanelVisible = true;
 private:
   GUIState currentState = FACE_EDITING;
   CameraMode currentCameraMode = GIMBALL;
@@ -21,13 +23,12 @@ private:
     0; // flag to reset the selection buffer on the GPU when the clear button
   // is pressed
 
-  bool has_state_changed = false;
-  bool isPanelVisible = true;
+
 
 public:
   MainGUI_state main_state;
 
-  void showMainWindowGUI();
+  void showMainWindowGUI(bool *keys);
 
   void setState(GUIState new_state) {
     currentState = new_state;

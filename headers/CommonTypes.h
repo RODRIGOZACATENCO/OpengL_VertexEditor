@@ -15,19 +15,23 @@ enum FrameBuffers {
 
 };
 enum GUIState { FACE_EDITING = 1, VERTEX_EDITING = 2, EDGE_EDITING = 3 };
+
 enum CameraMode {
+  NONE,
   GIMBALL,//camera view fixed on the center of the object
   FREE,//camera free to move and rotate
 };
 
-enum CameraMovement{
+enum KeyNames{
   LEFT,
   RIGHT,
   UP,
   DOWN,
+  TAB,
 };
-enum Render_type { main_render_pass, element_detection_pass };
-enum Shader_names {
+
+enum RenderType { main_render_pass, element_detection_pass };
+enum ShaderNames {
   face_color_pass,
   edge_color_pass,
   vertex_color_pass,
