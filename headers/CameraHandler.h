@@ -2,12 +2,10 @@
 
 
 #include "CommonTypes.h"
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <GUI.h>
 #include <GLFW/glfw3.h>
-
+#include <numbers>
 inline float pi = std::numbers::pi_v<float>;
 
 struct FreeCameraInfo {

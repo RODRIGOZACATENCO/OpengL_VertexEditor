@@ -25,41 +25,7 @@
 
 #include <vector>
 #include <glm/glm.hpp>
-
-inline std::vector<glm::vec3> cube_vertices = {
-  {-1.0f, -1.0f, -1.0f}, // 0 bottom left back
-  {-1.0f, -1.0f,  1.0f}, // 1 bottom left front
-  { 1.0f, -1.0f, -1.0f}, // 2 bottom right back
-  { 1.0f, -1.0f,  1.0f}, // 3 bottom right front
-  {-1.0f,  1.0f, -1.0f}, // 4 top left back
-  {-1.0f,  1.0f,  1.0f}, // 5 top left front
-  { 1.0f,  1.0f, -1.0f}, // 6 top right back
-  { 1.0f,  1.0f,  1.0f}  // 7 top right front
-};
-
-inline std::vector<int> faces = {
-    0, 2, 1, 1, 2, 3, // Bottom
-    0, 4, 2, 2, 4, 6, // Back
-    2, 6, 3, 3, 6, 7, // Right
-    1, 3, 5, 3, 7, 5, // Front
-    5, 7, 4, 6, 4, 7, // Top
-    0, 1, 4, 5, 4, 1, // Left
-  };
-inline std::vector<float> piramid_vertices = {
-    -1, -1, -1, // 0 bottom left back
-    -1, -1, 1, // 1 bottom left front
-    1, -1, -1, // 2 bottom right back
-    1, -1, 1, // 3 bottom right front
-    0, 1, 0, // 4 apex
-  };
-
-inline std::vector<int> piramid_faces = {
-    0, 2, 1, 1, 2, 3, // Bottom
-    0, 1, 4, // Left
-    1, 3, 4, // Front
-    3, 2, 4, // Right
-    2, 0, 4, // Back
-  };
+#include "KeyboardHandler.h"
 /*vertex editor main window
  *render pass that shows  the object
  *color picking pass that renders color ID's
@@ -79,6 +45,7 @@ private:
   int width, height; // window dimensions
   GLFWwindow* window;
   GUI gui;
+  std::unique_ptr<KeyboardHandler> keyboard;
   std::unique_ptr<ElementEditingRenderer> renderer;
   std::unique_ptr<ElementEditing> element_editing;
   std::map<std::string, std::unique_ptr<Scene>> scene_name_to_object;

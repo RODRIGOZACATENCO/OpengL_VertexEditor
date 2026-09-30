@@ -23,6 +23,6 @@ void ElementEditing::vertexRayCaster(glm::vec2 mouse_pos, glm::vec3 camera_pos, 
 
   //ray formula given by R(t)=O+t*D
   float t = glm::dot(plane_normal, (vertex_pos - camera_pos)) / (glm::dot(plane_normal, ray_direction));
-  glm::vec3 intersection_point = camera_pos + t * ray_direction; //position to move the vertex into
+      glm::vec3 intersection_point = camera_pos + t * ray_direction; //position to move the vertex into
   current_scene->updateVertexPos(std::get<1>(selected_element), std::get<2>(selected_element), intersection_point);
 }

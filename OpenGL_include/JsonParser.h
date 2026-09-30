@@ -1,15 +1,10 @@
-
 #pragma once
 #include <fstream>
 #include <iomanip>
-#include <limits>
 #include <string>
 #include <unordered_map>
-#include <utility>
 #include<variant>
 #include <vector>
-
-#include <stdexcept>
 
 
 class JsonValue {
@@ -22,21 +17,21 @@ public:
   using Object = std::unordered_map<std::string, JsonValue>;
   using ValueVariant = std::variant<Null, Boolean, Number, String, Array, Object>;
 
-  explicit JsonValue(Null null) : value(null) {}
+  JsonValue(Null null) : value(null) {}
+  JsonValue(int num):value(static_cast<double>(num)){}
+  JsonValue(Number number) : value(number) {}
 
-  explicit JsonValue(Number number) : value(number) {}
+  JsonValue(Boolean boolean) : value(boolean) {}
 
-  explicit JsonValue(Boolean boolean) : value(boolean) {}
+  JsonValue(String string) : value(string) {}
 
-  explicit JsonValue(String string) : value(string) {}
+  JsonValue(Array array) : value(array) {}
 
-  explicit JsonValue(Array array) : value(array) {}
+  JsonValue(Object object) : value(object) {}
 
-  explicit JsonValue(Object object) : value(object) {}
+  JsonValue(ValueVariant variant) : value(std::move(variant)) {}
 
-  explicit JsonValue(ValueVariant variant) : value(std::move(variant)) {}
-
-  explicit JsonValue(): value(std::monostate()) {}
+  JsonValue(): value(std::monostate()) {}
 
   Array& as_array() { return std::get<Array>(value); }
   const Array& as_array() const { return std::get<Array>(value); }
@@ -59,7 +54,11 @@ public:
 
   JsonValue& operator[](const std::string& key) {
     //when acessing value with key
+    if (!std::holds_alternative<Object>(value)) {
+      value=Object{};
+    }
     Object& obj = std::get<Object>(value);
+
     return obj[key];
   }
 
@@ -99,7 +98,7 @@ public:
         os << '"' << ob.first << '"' << ": " << ob.second;
         if (i++ < obj.size() - 1) os << "," << std::endl;
       }
-      os << "}";
+      os << std::endl<<"}";
     }
   };
 
@@ -107,7 +106,6 @@ public:
     std::visit(JsonPrinter{os}, json_value.value);
     return os;
   }
-
   double as_number() {
     Number number = std::get<Number>(value);
     return number;
@@ -353,7 +351,12 @@ private:
   }
 };
 
-class JsonObj { //used when creating a new josn file
-  void root
+class JsonObj {
+
+public:
+  JsonValue root;
+
+private:
+
 
 };

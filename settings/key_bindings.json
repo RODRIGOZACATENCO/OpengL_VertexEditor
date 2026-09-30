@@ -1,0 +1,13 @@
+{
+  "key_bindings":{
+    "ROTATE_LEFT": ["LEFT"],
+    "ROTATE_RIGHT": ["RIGHT"],
+    "MOVE_UP": ["UP"],
+    "MOVE_DOWN": ["DOWN"],
+    "MOVE_FORWARD": ["UP"],
+    "MOVE_BACKWARDS": ["DOWN"],
+    "MOVE_LEFT": ["LEFT"],
+    "MOVE_RIGHT": ["RIGHT"],
+    "TOGGLE_MENU": ["TAB"]
+  }
+}
