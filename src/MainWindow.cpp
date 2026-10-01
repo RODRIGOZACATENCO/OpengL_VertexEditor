@@ -165,15 +165,13 @@ void MainWindow::mainWindowKeyCallback(GLFWwindow* window, int key,
   if (instance) { instance->keyboard->processInput(key,action); }
 }
 
-void MainWindow::onKeyboardInput(GLFWwindow* window, int key, int scancode,
-                                 int action, int mods) {
-
-}
 
 void MainWindow::process_camera_movement() {
   if(camera.getCurrCameraMode()==GIMBALL) {
-    std::cout<<"asdsadsa";
     camera.gimballCameraUpdate();
+  }
+  else {
+    std::cout<<"bazinga";
   }
 
 

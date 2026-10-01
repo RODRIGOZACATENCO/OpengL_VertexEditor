@@ -67,8 +67,8 @@ public:
       glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 
     gui.setState(FACE_EDITING);
-    gui.setCameraMode(FREE);
-    camera.setCurrentCameraMode(FREE);
+    gui.setCameraMode(GIMBALL);
+    camera.setCurrentCameraMode(GIMBALL);
     gui.setKeyboard(keyboard.get());
     load_scene("default");
     renderer = std::make_unique<ElementEditingRenderer>(window, scene_name_to_object["default"].get());

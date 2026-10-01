@@ -20,7 +20,7 @@ void ElementEditingRenderer::processDrawCall(RenderType type_of_render) {
   case element_detection_pass:
     mainRenderPass();
     elementDetectionPass();
-    current_scene->resetVertexAlreadyRendered();
+    current_scene->resetVertexAlreadyRendered();//EDIT TO SELECT MULTIPLE ITEMS
     break;
   }
 }
@@ -384,22 +384,6 @@ void ElementEditingRenderer::updateModelMatrices() {
       glm::mat4 model = glm::mat4(1.0f);
 
       model = glm::translate(model, glm::vec3(0.0f, -1.0f, -5.0f));
-      float delta_angle = rotation_speed * delta_time;
-      glm::quat delta_rotation = glm::angleAxis(delta_angle, rotation_axis);
-      object_orientation = delta_rotation * object_orientation;
-      object_orientation = glm::normalize(object_orientation);
-
-      model = model * glm::mat4_cast(object_orientation);
-      current_scene->setModelMatrix(mesh, model);
-    }
-    // model for cube
-    if (name == "cube") {
-      rotation_axis = glm::vec3(1.0f, 0.2f, 0.5f);
-      rotation_speed = -pi / 10;
-      glm::mat4 model = glm::mat4(1.0f);
-      model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-      model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
-
       float delta_angle = rotation_speed * delta_time;
       glm::quat delta_rotation = glm::angleAxis(delta_angle, rotation_axis);
       object_orientation = delta_rotation * object_orientation;
