@@ -45,15 +45,16 @@ void MainWindow::use(std::string* scene_name) {
     renderer->setDeltaTime(delta_time);
     camera.setDeltaTime(delta_time);
     renderer->setRenderMode(gui.getCurrentState());
-    // 1. POLL EVENTS FIRST
+
     glfwPollEvents();
-    processInput();
+
+
+    process_camera_movement();
     if (gui.getResetFlag()) {
       renderer->getCurrentScene()->resetSelectionBuffer(
         gui.getCurrentState());
       gui.setResetFlag(0);
     }
-
     // 2. THEN START NEW IMGUI FRAME
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -62,9 +63,11 @@ void MainWindow::use(std::string* scene_name) {
     // 3. RENDER SCENE AND UI
     renderer->getCurrentScene()->setViewMatrix(camera.getCurrentViewMatrix());
     renderer->processDrawCall(main_render_pass);
-    gui.showMainWindowGUI(keys);
+    gui.showMainWindowGUI();
 
     glfwSwapBuffers(window);
+    keyboard->updateInput();
+    std::cout<<camera.getCurrCameraMode();
   }
 }
 
@@ -159,7 +162,7 @@ void MainWindow::mainWindowKeyCallback(GLFWwindow* window, int key,
     static_cast<MainWindow*>(glfwGetWindowUserPointer(window));
 
   // 4. Forward the call to the non-static member
-  if (instance) { instance->onKeyboardInput(window, key, scancode, action, mods); }
+  if (instance) { instance->keyboard->processInput(key,action); }
 }
 
 void MainWindow::onKeyboardInput(GLFWwindow* window, int key, int scancode,
@@ -167,18 +170,13 @@ void MainWindow::onKeyboardInput(GLFWwindow* window, int key, int scancode,
 
 }
 
-void MainWindow::processInput() {
-
-  keys[UP] =    (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS);
-  keys[DOWN] =  (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS);
-  keys[LEFT] =  (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS);
-  keys[RIGHT] = (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS);
-  keys[TAB]=    (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS);
+void MainWindow::process_camera_movement() {
   if(camera.getCurrCameraMode()==GIMBALL) {
-    camera.gimballCameraUpdate(keys);
+    std::cout<<"asdsadsa";
+    camera.gimballCameraUpdate();
   }
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    { glfwSetWindowShouldClose(window, GLFW_TRUE); }
+
+
 }
 
 void MainWindow::mainWindowScrollCallback(GLFWwindow* window, double xoffset,

@@ -9,10 +9,10 @@
 #include "imgui_impl_opengl3.h"
 // Face button
 
-void GUI::showMainWindowGUI(bool *keys) {
+void GUI::showMainWindowGUI() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
-	if(keys[TAB]) {
+	if(keyboard->isKeyJustPressed(GLFW_KEY_TAB)) {
 		isPanelVisible=!isPanelVisible;
 	}
 	if (!isPanelVisible) {

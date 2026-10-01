@@ -6,6 +6,8 @@
 #include <GUI.h>
 #include <GLFW/glfw3.h>
 #include <numbers>
+
+#include "KeyboardHandler.h"
 inline float pi = std::numbers::pi_v<float>;
 
 struct FreeCameraInfo {
@@ -37,9 +39,10 @@ struct GimballCameraInfo {
 
 class CameraHandler {
 private:
+  KeyboardHandler *keyboard;
   GimballCameraInfo gimball_info;
   FreeCameraInfo free_camera_info;
-  CameraMode current_camera_mode = GIMBALL;
+  CameraMode current_camera_mode = FREE;
   GUI *gui_ptr;
   GLFWwindow *window;
   float delta_time;
@@ -54,9 +57,7 @@ private:
   glm::mat4 current_view_matrix;
 
 public:
-  CameraHandler(GUI *gui_ptr,GLFWwindow *window):gui_ptr(gui_ptr),window(window) {
-    const bool no_keys[1024] = {};
-    gimballCameraUpdate(no_keys);
+  CameraHandler(GUI *gui_ptr,GLFWwindow *window):gui_ptr(gui_ptr),keyboard(keyboard),window(window) {
     int w,h;
     glfwGetWindowSize(window,&w,&h);
     free_camera_info.lastX=w/2;
@@ -65,8 +66,8 @@ public:
   }
 
   void freeCameraUpdate(bool *keys,double xposIn, double yposIn);
-  void gimballCameraUpdate(const bool* keys);
-
+  void gimballCameraUpdate();
+  void setKeyboard(KeyboardHandler *keyboard){this->keyboard=keyboard;}
   void processZoom(double yoffset);
 
   void setDeltaTime(float delta_time) { this->delta_time = delta_time; }

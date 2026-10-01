@@ -61,16 +61,20 @@ private:
 public:
   MainWindow(GLFWwindow* window) : camera(&gui,window), window(window), width(0), height(0) {
     glfwGetFramebufferSize(window, &width, &height);
+    keyboard=std::make_unique<KeyboardHandler>();
+    camera.setKeyboard(keyboard.get());
     projection = glm::perspective(
       glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 
     gui.setState(FACE_EDITING);
+    gui.setCameraMode(FREE);
+    camera.setCurrentCameraMode(FREE);
+    gui.setKeyboard(keyboard.get());
     load_scene("default");
     renderer = std::make_unique<ElementEditingRenderer>(window, scene_name_to_object["default"].get());
 
     renderer->setScreenSize(width, height);
     renderer->setRenderMode(FACE_EDITING);
-
     glfwSetWindowUserPointer(window, this);
     glfwSetKeyCallback(window, mainWindowKeyCallback);
     glfwSetMouseButtonCallback(window, mainWindowMouseCallback);
@@ -138,5 +142,5 @@ public:
 
   glm::vec2 getMouseNDC(GLFWwindow* window);
 
-  void processInput();
+  void process_camera_movement();
 };

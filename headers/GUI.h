@@ -5,7 +5,10 @@
 #pragma once
 #include<CommonTypes.h>
 
+#include "KeyboardHandler.h"
+
 struct MainGUI_state {
+
   bool isFaceSelectionActive = false;
   bool isVertexSelectionActive = false;
   bool isEdgeSelectionActive = false;
@@ -14,11 +17,12 @@ struct MainGUI_state {
 
 class GUI {
 public:
+  KeyboardHandler *keyboard;
   bool has_state_changed = false;
   bool isPanelVisible = true;
 private:
   GUIState currentState = FACE_EDITING;
-  CameraMode currentCameraMode = GIMBALL;
+  CameraMode currentCameraMode = FREE;
   unsigned int reset_selection_buffer_flag =
     0; // flag to reset the selection buffer on the GPU when the clear button
   // is pressed
@@ -28,8 +32,8 @@ private:
 public:
   MainGUI_state main_state;
 
-  void showMainWindowGUI(bool *keys);
-
+  void showMainWindowGUI();
+  void setKeyboard(KeyboardHandler *keyboard){this->keyboard=keyboard;}
   void setState(GUIState new_state) {
     currentState = new_state;
     has_state_changed = true;

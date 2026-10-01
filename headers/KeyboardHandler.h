@@ -4,6 +4,8 @@
 #include <vector>
 #include <GLFW/glfw3.h>
 #include "JsonParser.h"
+#include "CommonTypes.h"
+#include <iostream>
 enum Actions {
   ROTATE_LEFT,//GIMBALL
   ROTATE_RIGHT,
@@ -40,17 +42,11 @@ inline std::unordered_map<std::string,int> str_to_key_binding{
 
 };
 
-inline std::unordered_map<Actions,int> action_to_key;
+
 class KeyboardHandler {
 
 private:
-  enum KeyState {
-    IDLE,
-    PRESSED,
-    HOLD,
-    RELEASED
-
-  };
+  std::unordered_map<Actions,int> action_to_key;
   std::unordered_map<Actions, std::vector<int>> keyBindings;
   std::map<int,KeyState> keyStates;
 
@@ -59,12 +55,12 @@ public:
   KeyboardHandler() {
     JsonParser jsonparser;
     JsonValue settings=jsonparser.parseFile("../settings/key_bindings.json");
-    for (auto [action,key]: settings.as_object()) {
+    for (auto [action,key]: settings["key_bindings"].as_object()) {
       for (auto key_name : key.as_array()) {
-        keyBindings[string_to_action[action]].push_back(str_to_key_binding[key_name]);
+        keyBindings[string_to_action[action]].push_back(str_to_key_binding[key_name.as_string()]);
       }
-
     }
+    for(int i=0;i<=1024;i++) keyStates[i]=IDLE;
   };
   static void KeyCallback(GLFWwindow* window, int key, int scancode,
                                     int action, int mods);
@@ -72,5 +68,25 @@ public:
   void processInput(int key, int action);
 
   void updateInput();
+  std::map<int,KeyState> *getKeys() {
+    return &keyStates;
+  }
+  bool checkAction(Actions action,KeyState state) {
+    for(auto key_binding:keyBindings[action]) {
+        if(keyStates[key_binding]==state) return true;
+    }
+    return false;
+  }
+
+  bool checkActionIsActive(Actions action) {
+    for(auto key_binding:keyBindings[action]) {
+      if(keyStates[key_binding]==PRESSED || keyStates[key_binding]==HOLD) return true;
+    }
+    return false;
+  }
+  bool isKeyJustPressed(int key){return keyStates[key]==PRESSED;}
+  bool isKeyHeld(int key){return keyStates[key]==HOLD;}
+  bool isKeyJustReleased(int key){return keyStates[key]==RELEASED;}
+
 
 };

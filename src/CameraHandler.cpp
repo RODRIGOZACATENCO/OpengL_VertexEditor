@@ -4,25 +4,28 @@
 #include "CameraHandler.h"
 #include <GLFW/glfw3.h>
 #include <cmath>
+#include <map>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/trigonometric.hpp>
 
-void CameraHandler::gimballCameraUpdate(const bool* keys) {
-  if (keys[UP]) {
+#include "KeyboardHandler.h"
+
+void CameraHandler::gimballCameraUpdate() {
+  if (keyboard->checkActionIsActive(MOVE_UP)) {
     gimball_info.cur_elevation += gimball_info.rotation_speed * delta_time;
     if (gimball_info.cur_elevation > gimball_info.max_elevation)
       gimball_info.cur_elevation = gimball_info.max_elevation;
   }
-  if (keys[DOWN]) {
+  if (keyboard->checkActionIsActive(MOVE_DOWN)) {
     gimball_info.cur_elevation -= gimball_info.rotation_speed * delta_time;
     if (gimball_info.cur_elevation < gimball_info.min_elevation)
       gimball_info.cur_elevation = gimball_info.min_elevation;
   }
-  if (keys[LEFT]) {
+  if (keyboard->checkActionIsActive(MOVE_LEFT)) {
     gimball_info.curr_azimuth += gimball_info.rotation_speed * delta_time;
     gimball_info.curr_azimuth = fmodf(gimball_info.curr_azimuth, -glm::radians(360.0f));
   }
-  if (keys[RIGHT]) {
+  if (keyboard->checkActionIsActive(MOVE_RIGHT)) {
     gimball_info.curr_azimuth -= gimball_info.rotation_speed * delta_time;
     gimball_info.curr_azimuth = fmodf(gimball_info.curr_azimuth, glm::radians(360.0f));
   }
@@ -55,30 +58,30 @@ void CameraHandler::processZoom(double yoffset) {
 }
 
 void CameraHandler::freeCameraUpdate(bool *keys,double xposIn, double yposIn) {
-  // float xpos = static_cast<float>(xposIn);
-  // float ypos = static_cast<float>(yposIn);
-  //
-  // float xoffset = xpos - lastX;
-  // float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
-  // lastX = xpos;
-  // lastY = ypos;
-  //
-  // float sensitivity = 0.1f; // change this value to your liking
-  // xoffset *= sensitivity;
-  // yoffset *= sensitivity;
-  //
-  // yaw += xoffset;
-  // pitch += yoffset;
-  //
-  // // make sure that when pitch is out of bounds, screen doesn't get flipped
-  // if (pitch > 89.0f)
-  //   pitch = 89.0f;
-  // if (pitch < -89.0f)
-  //   pitch = -89.0f;
-  //
-  // glm::vec3 front;
-  // front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-  // front.y = sin(glm::radians(pitch));
-  // front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-  // cameraFront = glm::normalize(front);
+  float xpos = static_cast<float>(xposIn);
+  float ypos = static_cast<float>(yposIn);
+
+   float xoffset = xpos - free_camera_info.lastX;
+   float yoffset = free_camera_info.lastY - ypos;
+   free_camera_info.lastX = xpos;
+   free_camera_info.lastY = ypos;
+  float sensitivity = 0.1f; // change this value to your liking
+  xoffset *= sensitivity;
+  yoffset *= sensitivity;
+
+  free_camera_info.yaw += xoffset;
+  free_camera_info.pitch += yoffset;
+
+  // make sure that when pitch is out of bounds, screen doesn't get flipped
+  if (free_camera_info.pitch > 89.0f)
+    free_camera_info.pitch = 89.0f;
+  if (free_camera_info.pitch < -89.0f)
+    free_camera_info.pitch = -89.0f;
+
+  glm::vec3 front;
+  front.x = cos(glm::radians(free_camera_info.yaw)) * cos(glm::radians(free_camera_info.pitch));
+  front.y = sin(glm::radians(free_camera_info.pitch));
+  front.z = sin(glm::radians(free_camera_info.yaw)) * cos(glm::radians(free_camera_info.pitch));
+  free_camera_info.camera_front = glm::normalize(front);
+  current_view_matrix = glm::lookAt(camera_pos, free_camera_info.camera_front, camera_up);
 }

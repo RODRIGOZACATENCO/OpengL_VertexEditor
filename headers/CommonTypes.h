@@ -29,7 +29,13 @@ enum KeyNames{
   DOWN,
   TAB,
 };
+enum KeyState {
+  IDLE,
+  PRESSED,
+  HOLD,
+  RELEASED
 
+};
 enum RenderType { main_render_pass, element_detection_pass };
 enum ShaderNames {
   face_color_pass,
