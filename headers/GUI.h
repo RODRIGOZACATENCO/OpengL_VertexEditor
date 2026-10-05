@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "CameraHandler.h"
 #include<CommonTypes.h>
 
 #include "KeyboardHandler.h"
@@ -18,6 +19,8 @@ struct MainGUI_state {
 class GUI {
 public:
   KeyboardHandler *keyboard;
+  CameraHandler *camera;
+  GLFWwindow *window;
   bool has_state_changed = false;
   bool isPanelVisible = true;
 private:
@@ -31,6 +34,7 @@ private:
 
 public:
   MainGUI_state main_state;
+  GUI(GLFWwindow *window): window(window){}
 
   void showMainWindowGUI();
   void setKeyboard(KeyboardHandler *keyboard){this->keyboard=keyboard;}
@@ -41,7 +45,7 @@ public:
     main_state.isVertexSelectionActive = (new_state == VERTEX_EDITING);
     main_state.isEdgeSelectionActive = (new_state == EDGE_EDITING);
   }
-
+  void setCamera(CameraHandler *camera){this->camera=camera;}
   GUIState getCurrentState() const { return currentState; }
   unsigned int getResetFlag() const { return reset_selection_buffer_flag; }
   void setResetFlag(unsigned int flag) { reset_selection_buffer_flag = flag; }
@@ -49,6 +53,7 @@ public:
   void setCameraMode(CameraMode mode) {
     currentCameraMode = mode;
     main_state.cameraMode = mode;
+    camera->setCurrentCameraMode(mode);
   }
 
   CameraMode getCurrentCameraMode() const { return currentCameraMode; }

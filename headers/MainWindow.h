@@ -59,10 +59,11 @@ private:
   bool keys[1024] = {false};
 
 public:
-  MainWindow(GLFWwindow* window) : camera(&gui,window), window(window), width(0), height(0) {
+  MainWindow(GLFWwindow* window) :gui(window), camera(window), window(window), width(0), height(0) {
     glfwGetFramebufferSize(window, &width, &height);
     keyboard=std::make_unique<KeyboardHandler>();
     camera.setKeyboard(keyboard.get());
+    gui.setCamera(&camera);
     projection = glm::perspective(
       glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 

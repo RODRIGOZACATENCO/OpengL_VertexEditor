@@ -7,7 +7,6 @@
 #include "../headers/MainWindow.h"
 
 #include <GLFW/glfw3.h>
-#include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
@@ -37,6 +36,7 @@ void MainWindow::use(std::string* scene_name) {
   element_editing->setCurrentScene(scene_name_to_object[*scene_name].get());
 
   while (!glfwWindowShouldClose(window)) {
+    glfwPollEvents();
     element_editing->setViewProjectionMatrix(renderer->getCurrentScene()->getViewProjectionMatrix());
     float time = glfwGetTime();
     delta_time = time - last_frame;
@@ -46,10 +46,9 @@ void MainWindow::use(std::string* scene_name) {
     camera.setDeltaTime(delta_time);
     renderer->setRenderMode(gui.getCurrentState());
 
-    glfwPollEvents();
-
 
     process_camera_movement();
+
     if (gui.getResetFlag()) {
       renderer->getCurrentScene()->resetSelectionBuffer(
         gui.getCurrentState());
@@ -67,7 +66,6 @@ void MainWindow::use(std::string* scene_name) {
 
     glfwSwapBuffers(window);
     keyboard->updateInput();
-    std::cout<<camera.getCurrCameraMode();
   }
 }
 
@@ -149,10 +147,8 @@ void MainWindow::mainWindowMousePosCallback(GLFWwindow* window, double xposIn, d
 }
 
 void MainWindow::onMouseMovement(double xposIn, double yposIn) {
-
-  if(camera.getCurrCameraMode()==FREE && !gui.isPanelVisible) {
     camera.freeCameraUpdate(keys,xposIn,yposIn);
-  }
+
 }
 
 void MainWindow::mainWindowKeyCallback(GLFWwindow* window, int key,
@@ -170,11 +166,6 @@ void MainWindow::process_camera_movement() {
   if(camera.getCurrCameraMode()==GIMBALL) {
     camera.gimballCameraUpdate();
   }
-  else {
-    std::cout<<"bazinga";
-  }
-
-
 }
 
 void MainWindow::mainWindowScrollCallback(GLFWwindow* window, double xoffset,

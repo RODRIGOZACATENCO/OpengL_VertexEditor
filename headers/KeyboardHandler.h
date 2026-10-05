@@ -5,7 +5,6 @@
 #include <GLFW/glfw3.h>
 #include "JsonParser.h"
 #include "CommonTypes.h"
-#include <iostream>
 enum Actions {
   ROTATE_LEFT,//GIMBALL
   ROTATE_RIGHT,
@@ -62,12 +61,10 @@ public:
     }
     for(int i=0;i<=1024;i++) keyStates[i]=IDLE;
   };
-  static void KeyCallback(GLFWwindow* window, int key, int scancode,
-                                    int action, int mods);
-
   void processInput(int key, int action);
 
   void updateInput();
+
   std::map<int,KeyState> *getKeys() {
     return &keyStates;
   }

@@ -7,7 +7,6 @@
 #include <map>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/trigonometric.hpp>
-
 #include "KeyboardHandler.h"
 
 void CameraHandler::gimballCameraUpdate() {
@@ -58,6 +57,7 @@ void CameraHandler::processZoom(double yoffset) {
 }
 
 void CameraHandler::freeCameraUpdate(bool *keys,double xposIn, double yposIn) {
+
   float xpos = static_cast<float>(xposIn);
   float ypos = static_cast<float>(yposIn);
 
@@ -65,7 +65,7 @@ void CameraHandler::freeCameraUpdate(bool *keys,double xposIn, double yposIn) {
    float yoffset = free_camera_info.lastY - ypos;
    free_camera_info.lastX = xpos;
    free_camera_info.lastY = ypos;
-  float sensitivity = 0.1f; // change this value to your liking
+  float sensitivity = 0.1f;
   xoffset *= sensitivity;
   yoffset *= sensitivity;
 
@@ -78,10 +78,23 @@ void CameraHandler::freeCameraUpdate(bool *keys,double xposIn, double yposIn) {
   if (free_camera_info.pitch < -89.0f)
     free_camera_info.pitch = -89.0f;
 
+
+  if(!free_camera_info.is_movement_active) {
+    return;
+  }
   glm::vec3 front;
   front.x = cos(glm::radians(free_camera_info.yaw)) * cos(glm::radians(free_camera_info.pitch));
   front.y = sin(glm::radians(free_camera_info.pitch));
   front.z = sin(glm::radians(free_camera_info.yaw)) * cos(glm::radians(free_camera_info.pitch));
   free_camera_info.camera_front = glm::normalize(front);
-  current_view_matrix = glm::lookAt(camera_pos, free_camera_info.camera_front, camera_up);
+  current_view_matrix = glm::lookAt(camera_pos, camera_pos +free_camera_info.camera_front, camera_up);
+
+}
+
+void CameraHandler::updateInfoForCameraChange(CameraMode swap_from,CameraMode swap_into) {
+  if(swap_from==GIMBALL && swap_into==FREE) {
+    free_camera_info.camera_front=glm::normalize(gimball_info.curr_target-camera_pos);
+    free_camera_info.yaw= glm::degrees(atan2(free_camera_info.camera_front.z, free_camera_info.camera_front.x));
+    free_camera_info.pitch= glm::degrees(asin(free_camera_info.camera_front.y));
+  }
 }

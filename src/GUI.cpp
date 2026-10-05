@@ -13,7 +13,17 @@ void GUI::showMainWindowGUI() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
 	if(keyboard->isKeyJustPressed(GLFW_KEY_TAB)) {
+		if(!isPanelVisible) {
+			camera->setFreeCameraCanMove(false);
+			glfwSetInputMode(window,GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		}
+		else {
+			camera->setFreeCameraCanMove(true);
+			if(camera->getCurrCameraMode()==FREE) glfwSetInputMode(window,GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		}
+
 		isPanelVisible=!isPanelVisible;
+
 	}
 	if (!isPanelVisible) {
 		// Show only a small button in the top-left corner to re-open the panel
