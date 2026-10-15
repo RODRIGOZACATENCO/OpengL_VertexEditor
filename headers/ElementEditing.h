@@ -1,12 +1,13 @@
 #pragma once
 #define GLFW_INCLUDE_NONE
 
-#include <iostream>
+
 
 #include <tuple>
 #include "CommonTypes.h"
+#include "Scene.h"
 
-class Scene;
+
 
 class ElementEditing {
 private:
@@ -23,6 +24,8 @@ public:
   void setScreenSize(unsigned int width, unsigned int height) {
     this->window_width = width;
     this->window_height = height;
+    setViewProjectionMatrix(current_scene->getViewProjectionMatrix());
+
   }
 
   void setCurrentScene(Scene* scene) { this->current_scene = scene; }

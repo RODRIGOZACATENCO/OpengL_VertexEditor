@@ -41,6 +41,12 @@ target_compile_definitions(Vendor PUBLIC
         IMGUI_IMPL_OPENGL_LOADER_GLAD
 )
 
+# Skip debug info for third-party code (imgui/glad) -> smaller objects, faster linking.
+# Remove this if you ever need to step into imgui internals.
+if (NOT MSVC)
+    target_compile_options(Vendor PRIVATE $<$<CONFIG:Debug>:-g0>)
+endif ()
+
 target_link_libraries(Vendor PUBLIC
         glfw
         ${OPENGL_LIBRARIES}
@@ -48,12 +54,13 @@ target_link_libraries(Vendor PUBLIC
 
 # --- 2. Core Library (Rebuilds Fast) ---
 # FIX: Removed the redundant second add_library declaration that was causing errors.
-add_library(VertexEditorCore STATIC
+# OBJECT library: object files are linked directly into the exe, skipping the
+# slow "ar" step that rebuilt an 18 MB .a on every single change.
+add_library(VertexEditorCore OBJECT
         ${SOURCES}
         OpenGL_include/JsonParser.h
         OpenGL_include/ObjHandler.h
         headers/KeyboardHandler.h
-        src/KeybardHandler.cpp
 )
 
 target_include_directories(VertexEditorCore PUBLIC
@@ -88,6 +95,19 @@ target_precompile_headers(VertexEditorCore PRIVATE
 )
 
 # --- Main Executable ---
-add_executable(${PROJECT_NAME} main.cpp
-        headers/KeyboardHandler.h)
+add_executable(${PROJECT_NAME} main.cpp)
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/shaders"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/shaders"
+
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/settings"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/settings")
+
 target_link_libraries(${PROJECT_NAME} PRIVATE VertexEditorCore)
+
+# Reuse Core's precompiled header so main.cpp doesn't re-parse assimp/glm/std headers.
+target_precompile_headers(${PROJECT_NAME} REUSE_FROM VertexEditorCore)
+

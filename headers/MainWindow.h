@@ -39,12 +39,10 @@
 
 class MainWindow {
 private:
-  CameraHandler camera;
   JsonParser json_parser;
   ObjHandler obj_parser;
   int width, height; // window dimensions
   GLFWwindow* window;
-  GUI gui;
   std::unique_ptr<KeyboardHandler> keyboard;
   std::unique_ptr<ElementEditingRenderer> renderer;
   std::unique_ptr<ElementEditing> element_editing;
@@ -59,22 +57,16 @@ private:
   bool keys[1024] = {false};
 
 public:
-  MainWindow(GLFWwindow* window) :gui(window), camera(window), window(window), width(0), height(0) {
+  MainWindow(GLFWwindow* window) :window(window), width(0), height(0) {
     glfwGetFramebufferSize(window, &width, &height);
     keyboard=std::make_unique<KeyboardHandler>();
-    camera.setKeyboard(keyboard.get());
-    gui.setCamera(&camera);
     projection = glm::perspective(
       glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 
-    gui.setState(FACE_EDITING);
-    gui.setCameraMode(GIMBALL);
-    camera.setCurrentCameraMode(GIMBALL);
-    gui.setKeyboard(keyboard.get());
-    load_scene("default");
+    create_scene("default");
     renderer = std::make_unique<ElementEditingRenderer>(window, scene_name_to_object["default"].get());
 
-    renderer->setScreenSize(width, height);
+    renderer->changeScreenSize(width, height);
     renderer->setRenderMode(FACE_EDITING);
     glfwSetWindowUserPointer(window, this);
     glfwSetKeyCallback(window, mainWindowKeyCallback);
@@ -85,10 +77,9 @@ public:
     element_editing = std::make_unique<ElementEditing>(scene_name_to_object["default"].get());
   }
 
-  void load_scene(const std::string& scene_name="default");
+  void create_scene(const std::string& scene_name="default");
   // Getters and Setters
   GLFWwindow* getWindow() const { return window; }
-  GUI& getGui() { return gui; }
   ElementEditingRenderer* getRenderer() { return renderer.get(); }
   int getWidth() const { return width; }
   int getHeight() const { return height; }

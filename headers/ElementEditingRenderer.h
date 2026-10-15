@@ -65,14 +65,21 @@ public:
   }
 
   // Getters and Setters
-  void setScreenSize(unsigned int width, unsigned int height) {
+  void changeScreenSize(unsigned int width, unsigned int height) {
+    if (width == 0 || height == 0)
+      return;
     this->width = width;
     this->height = height;
+    glm::mat4 projection=glm::perspective(
+      glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
+    current_scene->setProjectionMatrix(projection);
+    setupViewProjectionMatrices();
+    resizeFramebuffer();
   }
 
   void setCurrentScene(Scene* scene) {
     this->current_scene = scene;
-    setViewProjectionMatrices();
+    setupViewProjectionMatrices();
   }
 
 
@@ -114,7 +121,7 @@ public:
 
   void resizeFramebuffer();
 
-  void setViewProjectionMatrices();
+  void setupViewProjectionMatrices();
 
   void updateModelMatrices(); // updates all given model matrices, for now
   std::pair<int, int> getCursorPositionInViewport(GLFWwindow* window);

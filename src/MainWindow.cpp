@@ -43,16 +43,16 @@ void MainWindow::use(std::string* scene_name) {
     last_frame = time;
 
     renderer->setDeltaTime(delta_time);
-    camera.setDeltaTime(delta_time);
-    renderer->setRenderMode(gui.getCurrentState());
+    renderer->getCurrentScene()->getCamera()->setDeltaTime(delta_time);
+    renderer->setRenderMode(renderer->getCurrentScene()->getGui()->getCurrentState());
 
 
     process_camera_movement();
 
-    if (gui.getResetFlag()) {
+    if (renderer->getCurrentScene()->getGui()->getResetFlag()) {
       renderer->getCurrentScene()->resetSelectionBuffer(
-        gui.getCurrentState());
-      gui.setResetFlag(0);
+        renderer->getCurrentScene()->getGui()->getCurrentState());
+      renderer->getCurrentScene()->getGui()->setResetFlag(0);
     }
     // 2. THEN START NEW IMGUI FRAME
     ImGui_ImplOpenGL3_NewFrame();
@@ -60,9 +60,9 @@ void MainWindow::use(std::string* scene_name) {
     ImGui::NewFrame();
 
     // 3. RENDER SCENE AND UI
-    renderer->getCurrentScene()->setViewMatrix(camera.getCurrentViewMatrix());
+    renderer->getCurrentScene()->setViewMatrix(renderer->getCurrentScene()->getCamera()->getCurrentViewMatrix());
     renderer->processDrawCall(main_render_pass);
-    gui.showMainWindowGUI();
+    renderer->getCurrentScene()->getGui()->showMainWindowGUI();
 
     glfwSwapBuffers(window);
     keyboard->updateInput();
@@ -84,13 +84,15 @@ void MainWindow::framebufferSizeCallback(GLFWwindow* window, int width,
   MainWindow* instance =
     static_cast<MainWindow*>(glfwGetWindowUserPointer(window));
 
-  // 4. Forward the call to the non-static member
-  if (instance) { instance->onFramebufferSize(); }
+  if (instance) {
+    instance->setWindowSize(width, height);
+    instance->onFramebufferSize();
+  }
 }
 
 void MainWindow::onFramebufferSize() {
-  renderer->setScreenSize(width, height);
-  renderer->resizeFramebuffer();
+
+  renderer->changeScreenSize(width, height);
   element_editing->setScreenSize(width, height);
 }
 
@@ -116,10 +118,10 @@ void MainWindow::onMouseButton(int button, int action, int mods) {
     //                                 // not using shift
     //
     // }
-    renderer->getCurrentScene()->resetSelectionBuffer(gui.getCurrentState());
+    renderer->getCurrentScene()->resetSelectionBuffer(renderer->getCurrentScene()->getGui()->getCurrentState());
     if (result) {
       auto [clicked_ID, mesh_id, empty] = *result;
-      switch (gui.getCurrentState()) {
+      switch (renderer->getCurrentScene()->getGui()->getCurrentState()) {
       case FACE_EDITING:
         renderer->getCurrentScene()->updateElementSelected(FACE, mesh_id, clicked_ID);
         element_editing->setCurrentSelectedElement(FACE, mesh_id, clicked_ID);
@@ -147,7 +149,7 @@ void MainWindow::mainWindowMousePosCallback(GLFWwindow* window, double xposIn, d
 }
 
 void MainWindow::onMouseMovement(double xposIn, double yposIn) {
-    camera.freeCameraUpdate(keys,xposIn,yposIn);
+    renderer->getCurrentScene()->getCamera()->freeCameraUpdate(keys,xposIn,yposIn);
 
 }
 
@@ -163,8 +165,11 @@ void MainWindow::mainWindowKeyCallback(GLFWwindow* window, int key,
 
 
 void MainWindow::process_camera_movement() {
-  if(camera.getCurrCameraMode()==GIMBALL) {
-    camera.gimballCameraUpdate();
+  if(renderer->getCurrentScene()->getCamera()->getCurrCameraMode()==GIMBALL) {
+    renderer->getCurrentScene()->getCamera()->gimballCameraUpdate();
+  }
+  if(renderer->getCurrentScene()->getCamera()->getCurrCameraMode()==FREE) {
+    renderer->getCurrentScene()->getCamera()->FreeCameraMovementUpdate();
   }
 }
 
@@ -176,9 +181,9 @@ void MainWindow::mainWindowScrollCallback(GLFWwindow* window, double xoffset,
   if (instance) { instance->onScrollCallback(window, xoffset, yoffset); }
 }
 
-void MainWindow::onScrollCallback(GLFWwindow* window, double xoffset, double yoffset) { camera.processZoom(-yoffset); }
+void MainWindow::onScrollCallback(GLFWwindow* window, double xoffset, double yoffset) { renderer->getCurrentScene()->getCamera()->processZoom(-yoffset); }
 
-void MainWindow::load_scene(const std::string& scene_name) {
+void MainWindow::create_scene(const std::string& scene_name) {
   glfwGetFramebufferSize(window, &width, &height);
   JsonValue scenes = json_parser.parseFile("../scenes.json");
 
@@ -186,8 +191,7 @@ void MainWindow::load_scene(const std::string& scene_name) {
     std::cout<<"\""<<"scene_name"<<"\""<<" already loaded";
     return;
   }
-  auto scene= std::make_unique<Scene>(camera.getCurrentViewMatrix(),projection);
-
+  auto scene= std::make_unique<Scene>(projection,keyboard.get(),window);
 
   for(auto &[mesh_name,mesh_info]: scenes[scene_name]["meshes"].as_object()) {
     RawMeshData data= obj_parser.getObjectInfo(mesh_info["file_name"]);

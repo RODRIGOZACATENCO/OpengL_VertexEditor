@@ -9,6 +9,26 @@
 #include <glm/trigonometric.hpp>
 #include "KeyboardHandler.h"
 
+void CameraHandler::FreeCameraMovementUpdate() {
+  if(!free_camera_info.is_movement_active) {
+    return;
+  }
+  bool did_camera_move=false;
+  if(keyboard->checkActionIsActive(MOVE_FORWARD)) {
+    camera_pos+=free_camera_info.camera_front*free_camera_info.movement_speed*delta_time;
+  }
+  if(keyboard->checkActionIsActive(MOVE_BACKWARDS)) {
+    camera_pos-=free_camera_info.camera_front*free_camera_info.movement_speed*delta_time;
+  }
+  if(keyboard->checkActionIsActive(MOVE_LEFT)) {
+    camera_pos-=glm::cross(free_camera_info.camera_front,camera_up)*free_camera_info.movement_speed*delta_time;
+  }
+  if(keyboard->checkActionIsActive(MOVE_RIGHT)) {
+    camera_pos+=glm::cross(free_camera_info.camera_front,camera_up)*free_camera_info.movement_speed*delta_time;
+  }
+  current_view_matrix = glm::lookAt(camera_pos, camera_pos+free_camera_info.camera_front, camera_up);
+}
+
 void CameraHandler::gimballCameraUpdate() {
   if (keyboard->checkActionIsActive(MOVE_UP)) {
     gimball_info.cur_elevation += gimball_info.rotation_speed * delta_time;
@@ -57,7 +77,9 @@ void CameraHandler::processZoom(double yoffset) {
 }
 
 void CameraHandler::freeCameraUpdate(bool *keys,double xposIn, double yposIn) {
-
+  if(!free_camera_info.is_movement_active) {
+    return;
+  }
   float xpos = static_cast<float>(xposIn);
   float ypos = static_cast<float>(yposIn);
 
@@ -78,10 +100,6 @@ void CameraHandler::freeCameraUpdate(bool *keys,double xposIn, double yposIn) {
   if (free_camera_info.pitch < -89.0f)
     free_camera_info.pitch = -89.0f;
 
-
-  if(!free_camera_info.is_movement_active) {
-    return;
-  }
   glm::vec3 front;
   front.x = cos(glm::radians(free_camera_info.yaw)) * cos(glm::radians(free_camera_info.pitch));
   front.y = sin(glm::radians(free_camera_info.pitch));
@@ -97,4 +115,5 @@ void CameraHandler::updateInfoForCameraChange(CameraMode swap_from,CameraMode sw
     free_camera_info.yaw= glm::degrees(atan2(free_camera_info.camera_front.z, free_camera_info.camera_front.x));
     free_camera_info.pitch= glm::degrees(asin(free_camera_info.camera_front.y));
   }
+
 }

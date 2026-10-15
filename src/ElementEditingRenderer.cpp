@@ -9,7 +9,7 @@
 #include <vector>
 
 void ElementEditingRenderer::processDrawCall(RenderType type_of_render) {
-  setViewProjectionMatrices();
+  setupViewProjectionMatrices();
   glfwGetFramebufferSize(window, (&width), &height);
   glViewport(0, 0, width, height);
 
@@ -119,8 +119,7 @@ void ElementEditingRenderer::mainRenderPass() {
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glEnable(GL_PROGRAM_POINT_SIZE);
 
-  //renderAxisLines();
-
+  renderAxisLines();
   int face_offset = 0;
   int vertex_offset = current_scene->getFaceSelectionArray()->size();
   int edges_offset = current_scene->getFaceSelectionArray()->size() +
@@ -294,7 +293,7 @@ void ElementEditingRenderer::mainColorFrameBufferSetup(FramebufferInfo* main_col
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void ElementEditingRenderer::setViewProjectionMatrices() {
+void ElementEditingRenderer::setupViewProjectionMatrices() {
   for (int i = 0; i < shaders.size(); i++) {
     if (shaders[i]) {
       shaders[i]->use();
@@ -367,7 +366,7 @@ void ElementEditingRenderer::initializeShaders() {
     std::make_unique<Shader>(render_window_dir + "render_window.vert",
                              render_window_dir + "render_window.frag");
 
-  setViewProjectionMatrices();
+  setupViewProjectionMatrices();
 }
 
 void ElementEditingRenderer::updateModelMatrices() {
@@ -405,9 +404,11 @@ void ElementEditingRenderer::cleanup() {
 
 void ElementEditingRenderer::resizeFramebuffer() {
   glfwGetFramebufferSize(window, &width, &height);
+  if (width == 0 || height == 0)
+    return;
   glBindTexture(GL_TEXTURE_2D, frame_buffers[MAIN_COLOR_BUFFER].texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32UI, width, height, 0, GL_RGB_INTEGER,
-               GL_UNSIGNED_INT, nullptr);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA,
+               GL_UNSIGNED_BYTE, nullptr);
   glBindTexture(GL_TEXTURE_2D, frame_buffers[MAIN_COLOR_BUFFER].depth_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0,
                GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
@@ -417,9 +418,7 @@ void ElementEditingRenderer::resizeFramebuffer() {
   glBindTexture(GL_TEXTURE_2D, frame_buffers[ELEMENT_DETECTION_BUFFER].depth_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0,
                GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-  glBindTexture(GL_TEXTURE_2D, 0); // Unbind when done
-
-
+  glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 std::optional<std::tuple<unsigned int, unsigned int, unsigned int>>

@@ -18,7 +18,7 @@ private:
   struct FreeCameraInfo {
     bool is_movement_active=false;
     glm::vec3 camera_front;
-    float movement_speed=1.0f;
+    float movement_speed=10.0f;
     float yaw;
     float pitch;
     float lastX=0;
@@ -56,15 +56,17 @@ private:
   glm::mat4 current_view_matrix;
 
 public:
-  CameraHandler(GLFWwindow *window):keyboard(keyboard),window(window) {
+  CameraHandler(GLFWwindow *window,KeyboardHandler *keyboard):keyboard(keyboard),window(window) {
     int w,h;
     glfwGetWindowSize(window,&w,&h);
     free_camera_info.lastX=w/2;
     free_camera_info.lastY=h/2;
+    setCurrentCameraMode(GIMBALL);
 
   }
 
   void freeCameraUpdate(bool *keys,double xposIn, double yposIn);
+  void FreeCameraMovementUpdate();
   void gimballCameraUpdate();
   void setKeyboard(KeyboardHandler *keyboard){this->keyboard=keyboard;}
   void processZoom(double yoffset);

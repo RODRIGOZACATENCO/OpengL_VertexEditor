@@ -12,7 +12,6 @@
 #include <string>
 #include <vector>
 
-#include "ElementEditing.h"
 #include "GUI.h"
 #include "Mesh.h"
 
@@ -71,9 +70,15 @@ Into a single vector ,index offset needed per mesh
   std::map<Mesh*, std::string> mesh_to_name;
   std::vector<std::unique_ptr<Mesh>> meshes;
 
+  CameraHandler camera;
+  GUI gui;
+
 public:
-  Scene(glm::mat4 view, glm::mat4 projection)
-    : view(view), projection(projection) { view_projection_matrix = projection * view; }
+  Scene(glm::mat4 projection,KeyboardHandler *keyboard, GLFWwindow *window)
+    :projection(projection), camera(window,keyboard),gui(window,&camera,keyboard) {
+    view=camera.getCurrentViewMatrix();
+    view_projection_matrix = projection * view;;
+  }
 
   void addMesh(std::unique_ptr<Mesh> mesh, std::string name, glm::mat4 model) {
     Mesh* mesh_ptr = mesh.get();
@@ -92,21 +97,20 @@ public:
 
   void setViewMatrix(const glm::mat4& view) {
     this->view = view;
-    updateViewProjectionMatrix();
+    view_projection_matrix = projection * view;
   }
 
   void setProjectionMatrix(const glm::mat4& projection) {
     this->projection = projection;
-    updateViewProjectionMatrix();
+    view_projection_matrix = this->projection * view;
   }
-
-  void updateViewProjectionMatrix() { view_projection_matrix = projection * view; }
 
   void updateVertexPos(unsigned int mesh_id, unsigned int vertex_id, glm::vec3 new_pos);
 
   const glm::mat4& getViewProjectionMatrix() const { return view_projection_matrix; }
-
-  const glm::mat4& getViewMatrix() const { return view; }
+   CameraHandler *getCamera() {return &camera;}
+   GUI *getGui() {return &gui;}
+   glm::mat4& getViewMatrix()  { return view; }
   const glm::mat4& getProjectionMatrix() const { return projection; }
 
   const std::vector<std::unique_ptr<Mesh>>& getMeshes() const { return meshes; }

@@ -34,10 +34,12 @@ private:
 
 public:
   MainGUI_state main_state;
-  GUI(GLFWwindow *window): window(window){}
+  GUI(GLFWwindow *window,CameraHandler *camera, KeyboardHandler *keyboard):keyboard(keyboard), window(window),camera(camera) {
+    setState(FACE_EDITING);
+    setCameraMode(GIMBALL);
+  }
 
   void showMainWindowGUI();
-  void setKeyboard(KeyboardHandler *keyboard){this->keyboard=keyboard;}
   void setState(GUIState new_state) {
     currentState = new_state;
     has_state_changed = true;
