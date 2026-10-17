@@ -16,7 +16,7 @@ enum Actions {
   MOVE_LEFT,
   MOVE_RIGHT,
 
-  TOGGLE_MENU//MENU
+  TOGGLE_CAMERA_MODE
 };
 
 inline std::unordered_map<std::string,Actions>string_to_action{
@@ -28,7 +28,7 @@ inline std::unordered_map<std::string,Actions>string_to_action{
 {"MOVE_BACKWARDS", MOVE_BACKWARDS},
 {"MOVE_LEFT", MOVE_LEFT},
 {"MOVE_RIGHT", MOVE_RIGHT},
-{"OPEN_MENU",TOGGLE_MENU},
+{"TOGGLE_CAMERA_MODE",TOGGLE_CAMERA_MODE},
 };
 
 inline std::unordered_map<std::string,int> str_to_key_binding{
@@ -37,8 +37,6 @@ inline std::unordered_map<std::string,int> str_to_key_binding{
 {"UP",GLFW_KEY_UP},
 {"DOWN",GLFW_KEY_DOWN},
   {"TAB",GLFW_KEY_TAB}
-
-
 };
 
 
@@ -48,7 +46,9 @@ private:
   std::unordered_map<Actions,int> action_to_key;
   std::unordered_map<Actions, std::vector<int>> keyBindings;
   std::map<int,KeyState> keyStates;
-
+  bool isKeyJustPressed(int key){return keyStates[key]==PRESSED;}
+  bool isKeyHeld(int key){return keyStates[key]==HOLD;}
+  bool isKeyJustReleased(int key){return keyStates[key]==RELEASED;}
 
 public:
   KeyboardHandler() {
@@ -68,7 +68,7 @@ public:
   std::map<int,KeyState> *getKeys() {
     return &keyStates;
   }
-  bool checkAction(Actions action,KeyState state) {
+  bool checkActionStatus(Actions action,KeyState state) {
     for(auto key_binding:keyBindings[action]) {
         if(keyStates[key_binding]==state) return true;
     }
@@ -81,9 +81,6 @@ public:
     }
     return false;
   }
-  bool isKeyJustPressed(int key){return keyStates[key]==PRESSED;}
-  bool isKeyHeld(int key){return keyStates[key]==HOLD;}
-  bool isKeyJustReleased(int key){return keyStates[key]==RELEASED;}
 
 
 };

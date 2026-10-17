@@ -111,9 +111,16 @@ void CameraHandler::freeCameraUpdate(bool *keys,double xposIn, double yposIn) {
 
 void CameraHandler::updateInfoForCameraChange(CameraMode swap_from,CameraMode swap_into) {
   if(swap_from==GIMBALL && swap_into==FREE) {
+    glfwSetInputMode(window,GLFW_CURSOR,GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window,GLFW_CURSOR,GLFW_CURSOR_HIDDEN);
+    int h,w;
+    glfwGetWindowSize(window,&w,&h);
+    glfwSetCursorPos(window,(float)(w/2),(float)(h/2));
+    free_camera_info.is_movement_active=true;
     free_camera_info.camera_front=glm::normalize(gimball_info.curr_target-camera_pos);
     free_camera_info.yaw= glm::degrees(atan2(free_camera_info.camera_front.z, free_camera_info.camera_front.x));
     free_camera_info.pitch= glm::degrees(asin(free_camera_info.camera_front.y));
   }
+
 
 }

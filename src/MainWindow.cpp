@@ -119,8 +119,9 @@ void MainWindow::onMouseButton(int button, int action, int mods) {
     //
     // }
     renderer->getCurrentScene()->resetSelectionBuffer(renderer->getCurrentScene()->getGui()->getCurrentState());
+    auto [clicked_ID, mesh_id, empty] = *result;
     if (result) {
-      auto [clicked_ID, mesh_id, empty] = *result;
+
       switch (renderer->getCurrentScene()->getGui()->getCurrentState()) {
       case FACE_EDITING:
         renderer->getCurrentScene()->updateElementSelected(FACE, mesh_id, clicked_ID);
@@ -136,8 +137,10 @@ void MainWindow::onMouseButton(int button, int action, int mods) {
         element_editing->setCurrentSelectedElement(EDGE, mesh_id, clicked_ID);
         break;
       }
+
     }
   }
+
 }
 
 void MainWindow::mainWindowMousePosCallback(GLFWwindow* window, double xposIn, double yposIn) {
@@ -158,7 +161,6 @@ void MainWindow::mainWindowKeyCallback(GLFWwindow* window, int key,
   // 3. Retrieve the pointer we stored earlier
   MainWindow* instance =
     static_cast<MainWindow*>(glfwGetWindowUserPointer(window));
-
   // 4. Forward the call to the non-static member
   if (instance) { instance->keyboard->processInput(key,action); }
 }

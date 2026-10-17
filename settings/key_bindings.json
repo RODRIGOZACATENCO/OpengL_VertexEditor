@@ -8,6 +8,7 @@
     "MOVE_BACKWARDS": ["DOWN"],
     "MOVE_LEFT": ["LEFT"],
     "MOVE_RIGHT": ["RIGHT"],
-    "TOGGLE_MENU": ["TAB"]
+    "TOGGLE_CAMERA_MODE": ["TAB"],
+
   }
 }

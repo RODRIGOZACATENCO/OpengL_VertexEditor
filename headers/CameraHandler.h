@@ -80,6 +80,7 @@ public:
     this->current_camera_mode = camera_mode;
   }
   glm::vec3 getCameraPosition() { return camera_pos; }
+
   void setFreeCameraCanMove(bool state) {
     free_camera_info.is_movement_active=state;
   }

@@ -5,8 +5,8 @@
 
 void GUI::showMainWindowGUI() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	const ImGuiViewport* viewport = ImGui::GetMainViewport();
 
+	const ImGuiViewport* viewport = ImGui::GetMainViewport();
 	ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x, viewport->WorkPos.y), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(250.0f, viewport->WorkSize.y), ImGuiCond_Always);
 	ImGui::SetNextWindowBgAlpha(1.0f);
@@ -14,6 +14,10 @@ void GUI::showMainWindowGUI() {
 	             ImGuiWindowFlags_NoMove |
 	             ImGuiWindowFlags_NoResize |
 	             ImGuiWindowFlags_NoCollapse);
+  if (keyboard->checkActionStatus(TOGGLE_CAMERA_MODE,PRESSED)) {
+    currentCameraMode= currentCameraMode==FREE ?GIMBALL:FREE;
+    setCameraMode(currentCameraMode);
+  }
 
 	bool isGimball = (currentCameraMode == GIMBALL);
 	bool isFree = (currentCameraMode == FREE);
