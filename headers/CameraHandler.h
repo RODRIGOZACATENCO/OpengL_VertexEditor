@@ -16,6 +16,7 @@ inline float pi = std::numbers::pi_v<float>;
 class CameraHandler {
 private:
   struct FreeCameraInfo {
+    glm::vec3 camera_pos={0.0,0.5,-1};;
     bool is_movement_active=false;
     glm::vec3 camera_front;
     float movement_speed=10.0f;
@@ -26,6 +27,7 @@ private:
 
   };
   struct GimballCameraInfo {
+    glm::vec3 camera_pos={0.0,0.5,-1};
     float min_zoom_radius = 1.0f;
     float max_zoom_radius = 7.0f;
     float gimball_zoom_sensitivity = 0.25;
@@ -39,14 +41,28 @@ private:
     float rotation_speed = pi; //radians per second
     glm::vec3 curr_target = glm::vec3(0.0f); // point to orbit around
   };
+  struct MovementInfo {
+    glm::vec3 *pos_ptr;
+    glm::vec3 target_pos;
+    glm::vec3 *front_ptr;
+    glm::vec3 target_front;
+    MovementInfo( glm::vec3 start_pos, glm::vec3 front_pos,glm::vec3 target_pos,
+      glm::vec3 target_front,glm::vec3 *pos_ptr,glm::vec3 *front_ptr)
+      :pos_ptr(pos_ptr),front_ptr(front_ptr),target_front(target_front),target_pos(target_pos) {
+      *pos_ptr=start_pos;
+      *front_ptr=front_pos;
+    }
+  };
+
+  std::unique_ptr<MovementInfo> camera_movement_info;
   KeyboardHandler *keyboard;
   GimballCameraInfo gimball_info;
-  FreeCameraInfo free_camera_info;
-  CameraMode current_camera_mode = FREE;
+  FreeCameraInfo freecam_info;
+  CameraMode current_camera_mode = GIMBALL;
   GLFWwindow *window;
   float delta_time;
 
-  glm::vec3 camera_pos;
+
   glm::vec3 camera_up = {0.0f, 1.0f, 0.0f};
 
 
@@ -56,11 +72,12 @@ private:
   glm::mat4 current_view_matrix;
 
 public:
+  bool is_camera_moving=false;
   CameraHandler(GLFWwindow *window,KeyboardHandler *keyboard):keyboard(keyboard),window(window) {
     int w,h;
     glfwGetWindowSize(window,&w,&h);
-    free_camera_info.lastX=w/2;
-    free_camera_info.lastY=h/2;
+    freecam_info.lastX=w/2;
+    freecam_info.lastY=h/2;
     setCurrentCameraMode(GIMBALL);
 
   }
@@ -79,12 +96,12 @@ public:
     updateInfoForCameraChange(this->current_camera_mode,camera_mode);
     this->current_camera_mode = camera_mode;
   }
-  glm::vec3 getCameraPosition() { return camera_pos; }
 
   void setFreeCameraCanMove(bool state) {
-    free_camera_info.is_movement_active=state;
+    freecam_info.is_movement_active=state;
   }
   glm::vec3 getCameraFront() { return gimball_info.curr_target; }
   CameraMode getCurrCameraMode(){return current_camera_mode;}
   void updateInfoForCameraChange(CameraMode swap_from,CameraMode swap_into);
+  void stepCameraMovementToPos();
 };

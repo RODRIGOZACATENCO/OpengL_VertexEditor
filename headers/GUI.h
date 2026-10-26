@@ -55,6 +55,7 @@ public:
   void setCameraMode(CameraMode mode) {
     currentCameraMode = mode;
     main_state.cameraMode = mode;
+
     camera->setCurrentCameraMode(mode);
   }
 

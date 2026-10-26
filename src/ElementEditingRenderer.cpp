@@ -125,6 +125,11 @@ void ElementEditingRenderer::mainRenderPass() {
   int edges_offset = current_scene->getFaceSelectionArray()->size() +
     current_scene->getVertexSelectionArray()->size();
 
+  if(current_scene->getCamera()->is_camera_moving) {
+    current_scene->getCamera()->stepCameraMovementToPos();
+
+  }
+
   unsigned int edge_faces_normal_offset = 0;
   for (const auto& mesh_ptr : current_scene->getMeshes()) {
     Mesh* mesh = mesh_ptr.get();
@@ -170,7 +175,6 @@ void ElementEditingRenderer::mainRenderPass() {
     }
     glDisable(GL_POLYGON_OFFSET_FILL);
   }
-
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
